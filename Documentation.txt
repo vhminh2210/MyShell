@@ -1,0 +1,38 @@
+    MyShell Documentation
+******************************
+Command list - Update 7/5/2023
+
+NOTE: 
+[]: compulsory parameters
+(): optional parameters
+
+* exit	: Exit MyShell
+-----------------------
+* bgp [task]		: Create background process. Support .exe file execution.
+	- task (str)	: Executable file name in the current working directory (cwd)
+	E.g. 		: bgp HelloWorld.exe
+-----------------------
+* fgp [task] (t_wait)	: Create foreground process. Suppport .exe file execution.
+	- task (str)	: Executable file name in the current working directory (cwd)
+	- t_wait (ms)	: Waiting time before process termination. The process will run in foreground mode during this duration
+	E.g. 		: fgp HelloWorld.exe 10000
+-----------------------
+* list	: List running background process in chronological order.
+-----------------------
+* kill [process_id] (t_wait)	: Kill background process
+	- process_id (DWORD)	: Background process id
+	- t_wait (ms)		: Waiting time before process termination. The process will run in foreground mode during this duration
+	E.g. 			: kill 1234 5000
+-----------------------
+* pause [process_id]	: Pause specified process (by suspending its prime thread)
+	- process_id (DWORD)	: Background process id
+	E.g. 			: pause 1234
+-----------------------
+* resume [process_id]	: Resume specified process (by resumming its prime thread)
+	- process_id (DWORD)	: Background process id
+	E.g. 			: resume 1234
+-----------------------
+* status [process_id]	: Get specified process status
+	- process_id (DWORD)	: Background process id
+	E.g. 			: status 1234
+
