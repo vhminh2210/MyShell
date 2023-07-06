@@ -48,3 +48,9 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 -----------------------
 * time                 : Print out the time and date
 -----------------------
+* dir                  : List the directories as well as files
+-----------------------
+* cd     [dir_name]    : Change working directory
+	- dir_name              : name of the directory
+-----------------------
+
