@@ -2,7 +2,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <bits/stdc++.h>
-
+#include <direct.h>
 #define el '\n'
 
 using namespace std;
@@ -184,7 +184,7 @@ bool Check_id_exists(DWORD id)
     if(Cur_Ids.find(id) == Cur_Ids.end())
     {
         cout<<"Process "<<id<<" does not exist"<<el;
-        cout<<"~ ";
+//        cout<<"~ ";
         return false;
     }
     return true;
@@ -213,14 +213,14 @@ void Cleanse_Background()
 void RaiseSyntaxError()
 {
     cout<<"Syntax Error. Please check your command argument list"<<el;
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
 void RaiseCmdNotFound()
 {
     cout<<"Command not found."<<el;
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
@@ -244,7 +244,7 @@ void LIST()
         DWORD p = P.second;
         if(PROCESS_DICT[p].Task != "NULL") cout<<"Process ID: "<<p<<" - Task: "<<PROCESS_DICT[p].Task<<el;
     }
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
@@ -258,7 +258,8 @@ void RUN_BGP(CMD cmd)
     LPCSTR task = cmd.Arg[0].c_str();
     PROCESS_INFORMATION bpi = Create_Background_Process(task);
     cout<<"Process created with id: "<<bpi.dwProcessId<<el;
-    cout<<"\n~ ";
+    cout<<"\n";
+//    cout<<"\n~ ";
     return;
 }
 
@@ -276,7 +277,7 @@ void RUN_FGP(CMD cmd)
         Create_Foreground_Process(task, t_wait);
     }
     else Create_Foreground_Process(task);
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
@@ -295,7 +296,7 @@ void KILL(CMD cmd)
         Kill_Background_Process(PROCESS_DICT[id].PI, false, t_wait);
     }
     else Kill_Background_Process(PROCESS_DICT[id].PI);
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
@@ -311,7 +312,8 @@ void RESUME(DWORD id)
     }
     else cout<<"Process "<<id<<" is not paused."<<el;
     PROCESS_DICT[id].status = "active";
-    cout<<"\n~ ";
+    cout<<"\n";
+//    cout<<"\n~ ";
     return;
 }
 
@@ -323,7 +325,7 @@ void PAUSE(DWORD id)
     if(task.status != "paused") SuspendThread(pi.hThread);
     PROCESS_DICT[id].status = "paused";
     cout<<"Process "<<id<<" is paused."<<el;
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
@@ -333,7 +335,8 @@ void STATUS(DWORD id)
     TASK task = PROCESS_DICT[id];
     cout<<"Status: "<<task.status<<el;
     cout<<"Task: "<<task.Task<<el;
-    cout<<"\n~ ";
+    cout<<"\n";
+//    cout<<"\n~ ";
     return;
 }
 
@@ -350,7 +353,7 @@ void HELP(const std::string& filename) {
     }
 
     file.close();
-    cout << "\n~ ";
+//    cout << "~ ";
     return;
 }
 
@@ -365,14 +368,52 @@ void BATCH(const std::string& filename) {
     } else {
         std::cout << "\nFailed to execute the batch file." << std::endl;
     }
-    cout << "~ ";
+//    cout << "~ ";
     return;
 }
 
+void CD(const std::string& dir){
+	const char* directory = dir.c_str();
+	int result = chdir(directory);
+    
+    // Check the result of the directory change
+    if (result == 0) {
+        return;
+    } else {
+        std::cout << "No such directory." << std::endl;
+//        cout << "~ ";
+        return;
+    }
+	
+}
+
+std::string getCurrentDirectory() {
+    char buffer[FILENAME_MAX];
+    if (getcwd(buffer, sizeof(buffer)) != nullptr) {
+        return std::string(buffer);
+    } else {
+        return std::string();
+    }
+}
+
 void DIR(){
-	int result = system("dir");
-	cout << "~ ";
-	return;
+	const char* directoryPath = "."; // Specify the directory path to list
+
+    intptr_t handle;
+    _finddata_t fileInfo;
+
+    handle = _findfirst((directoryPath + std::string("\\*")).c_str(), &fileInfo);
+    if (handle == -1) {
+        std::cout << "Failed to open directory." << std::endl;
+        return;
+    }
+	int count = 0;
+    do {
+    	count++;
+        if (count > 2)std::cout << fileInfo.name << std::endl;
+    } while (_findnext(handle, &fileInfo) == 0);
+
+    _findclose(handle);
 }
 
 
@@ -396,12 +437,14 @@ void TIME_() {
 
 void MyShell()
 {
-    cout<<"Welcome to MyShell!"<<el;
-    cout<<"~ ";
+    cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
     string cmd_str;
+    
     while(true)
     {
         Cleanse_Background();
+        std::string currentDir = getCurrentDirectory();
+    	std::cout << "LMS " << currentDir << " >> ";
         getline(cin, cmd_str);
         CMD cmd = get_cmd(cmd_str);
         if(cmd.Type == "exit")
@@ -488,6 +531,15 @@ void MyShell()
 		}
 		if (cmd.Type == "time"){
 			TIME_();
+			continue;
+		}
+		if (cmd.Type == "cd"){
+			if(cmd.Arg.size() != 1)
+			{
+				RaiseSyntaxError();
+				continue;
+			}
+			CD(cmd.Arg[0]);
 			continue;
 		}
         RaiseCmdNotFound();
