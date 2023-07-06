@@ -29,6 +29,8 @@ PROCESS_INFORMATION cur_fgp;
 HANDLE Ctrl_handler;
 bool fgp_interrupt = false;
 
+string ROOT_PATH = ""; // Root directory of shell, for e.g. D:\\IT3070\\MyShell\\
+
 CMD get_cmd(string cmd_str)
 {
     CMD res;
@@ -288,6 +290,17 @@ void KILL(CMD cmd)
         RaiseSyntaxError();
         return;
     }
+    if(cmd.Arg[0] == "all")
+    {
+        for(auto P:PROCESS_IDS)
+        {
+            DWORD id = P.second;
+            Kill_Background_Process(PROCESS_DICT[id].PI);
+        }
+        cout<<"All process are killed.\n";
+        cout<<"~ ";
+        return;
+    }
     DWORD id = (DWORD) str2int(cmd.Arg[0]);
     if(!Check_id_exists(id)) return;
     if(cmd.Arg.size() > 1)
@@ -296,12 +309,33 @@ void KILL(CMD cmd)
         Kill_Background_Process(PROCESS_DICT[id].PI, false, t_wait);
     }
     else Kill_Background_Process(PROCESS_DICT[id].PI);
-//    cout<<"~ ";
+    cout<<"Process "<<id<<" is killed."<<el;
+    cout<<"~ ";
     return;
 }
 
-void RESUME(DWORD id)
+void RESUME(string Arg)
 {
+    if(Arg == "all")
+    {
+        for(auto P:PROCESS_IDS)
+        {
+            DWORD id = P.second;
+            if(!Check_id_exists(id)) return;
+            TASK task = PROCESS_DICT[id];
+            PROCESS_INFORMATION pi = task.PI;
+            if(task.status == "paused")
+            {
+                ResumeThread(pi.hThread);
+            }
+            else cout<<"Process "<<id<<" is not paused."<<el;
+            PROCESS_DICT[id].status = "active";
+        }
+        cout<<"All paused processes are resumed.\n";
+        cout<<"~ ";
+        return;
+    }
+    DWORD id = (DWORD) str2int(Arg);
     if(!Check_id_exists(id)) return;
     TASK task = PROCESS_DICT[id];
     PROCESS_INFORMATION pi = task.PI;
@@ -312,20 +346,35 @@ void RESUME(DWORD id)
     }
     else cout<<"Process "<<id<<" is not paused."<<el;
     PROCESS_DICT[id].status = "active";
-    cout<<"\n";
-//    cout<<"\n~ ";
+    cout<<"\n~ ";
     return;
 }
 
-void PAUSE(DWORD id)
+void PAUSE(string Arg)
 {
+    if(Arg == "all")
+    {
+        for(auto P:PROCESS_IDS)
+        {
+            DWORD id = P.second;
+            if(!Check_id_exists(id)) continue;
+            TASK task = PROCESS_DICT[id];
+            PROCESS_INFORMATION pi = task.PI;
+            if(task.status != "paused") SuspendThread(pi.hThread);
+            PROCESS_DICT[id].status = "paused";
+        }
+        cout<<"All processes are paused.\n";
+        cout<<"~ ";
+        return;
+    }
+    DWORD id = (DWORD) str2int(Arg);
     if(!Check_id_exists(id)) return;
     TASK task = PROCESS_DICT[id];
     PROCESS_INFORMATION pi = task.PI;
     if(task.status != "paused") SuspendThread(pi.hThread);
     PROCESS_DICT[id].status = "paused";
     cout<<"Process "<<id<<" is paused."<<el;
-//    cout<<"~ ";
+    cout<<"~ ";
     return;
 }
 
@@ -491,7 +540,7 @@ void MyShell()
                 RaiseSyntaxError();
                 continue;
             }
-            PAUSE((DWORD) str2int(cmd.Arg[0]));
+            PAUSE(cmd.Arg[0]);
             continue;
         }
         if(cmd.Type == "resume")
@@ -501,7 +550,7 @@ void MyShell()
                 RaiseSyntaxError();
                 continue;
             }
-            RESUME((DWORD) str2int(cmd.Arg[0]));
+            RESUME(cmd.Arg[0]);
             continue;
         }
         if(cmd.Type == "status")
@@ -516,7 +565,7 @@ void MyShell()
         }
         if(cmd.Type == "help")
         {
-        	HELP("documentation.txt");
+        	HELP(ROOT_PATH + "documentation.txt");
         	continue;
 		}
 		if(cmd.Type == "bat"){
