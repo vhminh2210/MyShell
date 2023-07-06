@@ -369,6 +369,31 @@ void BATCH(const std::string& filename) {
     return;
 }
 
+void DIR(){
+	int result = system("dir");
+	cout << "~ ";
+	return;
+}
+
+
+
+void DATE_() {
+    std::time_t currentTime = std::time(nullptr);
+    std::tm* currentDate = std::localtime(&currentTime);
+    int year = currentDate->tm_year + 1900;  // years since 1900
+    int month = currentDate->tm_mon + 1;     // months since January [0-11]
+    int day = currentDate->tm_mday;          // day of the month [1-31]
+    std::cout << "Current Date: " << day << "-" << month << "-" << year << std::endl;
+    cout << "~ ";
+}
+
+void TIME_() {
+    std::time_t currentTime = std::time(nullptr);
+    std::string timeString = std::ctime(&currentTime);
+    std::cout << "Current Time: " << timeString;
+    cout << "~ ";
+}
+
 void MyShell()
 {
     cout<<"Welcome to MyShell!"<<el;
@@ -446,6 +471,23 @@ void MyShell()
 				continue;
 			}
 			BATCH(cmd.Arg[0]);
+			continue;
+		}
+		if(cmd.Type == "dir"){
+			if(cmd.Arg.size() != 0)
+			{
+				RaiseSyntaxError();
+				continue;
+			}
+			DIR();
+			continue;
+		}
+		if (cmd.Type == "date"){
+			DATE_();
+			continue;
+		}
+		if (cmd.Type == "time"){
+			TIME_();
 			continue;
 		}
         RaiseCmdNotFound();
