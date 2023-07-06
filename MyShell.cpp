@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <csignal>
+#include <cstdlib>
 #include <bits/stdc++.h>
 
 #define el '\n'
@@ -129,7 +130,7 @@ void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME= INFINITE)
     HANDLE Handle[2] = {pi.hProcess, Ctrl_handler};
 
     WaitForSingleObject(pi.hProcess, MAX_TIME);
-    if(!fgp_interrupt) cout<<"Foreground process ended successfully. Press enter to continue ...\n~ ";
+    if(!fgp_interrupt) cout<<"Foreground process ended successfully. Press enter to continue ...\n";
     WaitForSingleObject(Ctrl_handler, MAX_TIME);
 
     if(!fgp_interrupt)
@@ -257,7 +258,7 @@ void RUN_BGP(CMD cmd)
     LPCSTR task = cmd.Arg[0].c_str();
     PROCESS_INFORMATION bpi = Create_Background_Process(task);
     cout<<"Process created with id: "<<bpi.dwProcessId<<el;
-    cout<<"~ ";
+    cout<<"\n~ ";
     return;
 }
 
@@ -310,7 +311,7 @@ void RESUME(DWORD id)
     }
     else cout<<"Process "<<id<<" is not paused."<<el;
     PROCESS_DICT[id].status = "active";
-    cout<<"~ ";
+    cout<<"\n~ ";
     return;
 }
 
@@ -332,7 +333,39 @@ void STATUS(DWORD id)
     TASK task = PROCESS_DICT[id];
     cout<<"Status: "<<task.status<<el;
     cout<<"Task: "<<task.Task<<el;
-    cout<<"~ ";
+    cout<<"\n~ ";
+    return;
+}
+
+void HELP(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file) {
+        std::cout << "Failed to open the file." << std::endl;
+        return;
+    }
+
+    std::string line;
+    while (std::getline(file, line)) {
+        std::cout << line << std::endl;
+    }
+
+    file.close();
+    cout << "\n~ ";
+    return;
+}
+
+void BATCH(const std::string& filename) {
+    std::string command = "cmd /c " + filename;
+
+    int result = system(command.c_str());
+
+    // Check the result of the system call
+    if (result == 0) {
+        std::cout << "\nBatch file executed successfully." << std::endl;
+    } else {
+        std::cout << "\nFailed to execute the batch file." << std::endl;
+    }
+    cout << "~ ";
     return;
 }
 
@@ -401,6 +434,20 @@ void MyShell()
             STATUS((DWORD) str2int(cmd.Arg[0]));
             continue;
         }
+        if(cmd.Type == "help")
+        {
+        	HELP("documentation.txt");
+        	continue;
+		}
+		if(cmd.Type == "bat"){
+			if(cmd.Arg.size() != 1)
+			{
+				RaiseSyntaxError();
+				continue;
+			}
+			BATCH(cmd.Arg[0]);
+			continue;
+		}
         RaiseCmdNotFound();
         //cout<<"~ ";
     }
