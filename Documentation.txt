@@ -38,3 +38,8 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 * status [process_id]	: Get specified process status
 	- process_id (DWORD)	: Background process id
 	E.g. 			: status 1234
+-----------------------
+* bat    [filename]             : Run the specified .bat file
+        - filename              : The name of the .bat file
+	E.g.                    : bat example.bat
+				  bat example
