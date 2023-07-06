@@ -6,7 +6,9 @@ NOTE:
 []: compulsory parameters
 (): optional parameters
 
-* exit	: Exit MyShell
+* help                  : Display this help message.
+-----------------------
+* exit	                : Exit MyShell
 -----------------------
 * bgp [task]		: Create background process. Support .exe file execution.
 	- task (str)	: Executable file name in the current working directory (cwd)
@@ -36,4 +38,3 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 * status [process_id]	: Get specified process status
 	- process_id (DWORD)	: Background process id
 	E.g. 			: status 1234
-
