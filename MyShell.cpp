@@ -129,7 +129,7 @@ void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME= INFINITE)
     HANDLE Handle[2] = {pi.hProcess, Ctrl_handler};
 
     WaitForSingleObject(pi.hProcess, MAX_TIME);
-    if(!fgp_interrupt) cout<<"Foreground process ended successfully. Press enter to continue ...";
+    if(!fgp_interrupt) cout<<"Foreground process ended successfully. Press enter to continue ...\n~ ";
     WaitForSingleObject(Ctrl_handler, MAX_TIME);
 
     if(!fgp_interrupt)
