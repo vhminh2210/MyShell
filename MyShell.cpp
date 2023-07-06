@@ -31,6 +31,43 @@ bool fgp_interrupt = false;
 
 string ROOT_PATH = ""; // Root directory of shell, for e.g. D:\\IT3070\\MyShell\\
 
+CMD get_cmd(string cmd_str);
+int str2int(string x);
+void Print_CMD(CMD cmd);
+void SIGINT_Handler(int param);
+void Get_signal();
+void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME);
+void Kill_Background_Process(PROCESS_INFORMATION pi, bool immediate, DWORD MAX_TIME);
+PROCESS_INFORMATION Create_Background_Process(LPCSTR task);
+bool Check_id_exists(DWORD id);
+void Cleanse_Background();
+void RaiseSyntaxError();
+void RaiseCmdNotFound();
+void EXIT();
+void LIST();
+void RUN_BGP(CMD cmd);
+void RUN_FGP(CMD cmd);
+void KILL(CMD cmd);
+void RESUME(string Arg);
+void PAUSE(string Arg);
+void STATUS(DWORD id);
+void HELP(const std::string& filename);
+void BATCH(const std::string& filename);
+void CD(const std::string& dir);
+std::string getCurrentDirectory();
+void DIR();
+void DATE_();
+void TIME_();
+bool MKDIR(const std::string& directoryPath);
+void MyShell();
+
+int main()
+{
+    MyShell();
+    Cleanse_Background();
+    return 0;
+}
+
 CMD get_cmd(string cmd_str)
 {
     CMD res;
@@ -177,7 +214,8 @@ PROCESS_INFORMATION Create_Background_Process(LPCSTR task)
     PROCESS_IDS.insert(make_pair(++cnt_history, pi.dwProcessId));
     Cur_Ids.insert(pi.dwProcessId);
     PROCESS_DICT[pi.dwProcessId] = cur_task;
-
+    if(pi.dwProcessId == 0 && pi.dwThreadId == 0) cout<<"Background process created unsuccessfully.\n";
+	else cout<<"Background process "<<pi.dwProcessId<<" created successfully.\n";
     return pi;
 }
 
@@ -228,6 +266,10 @@ void RaiseCmdNotFound()
 
 void EXIT()
 {
+	for(auto P : PROCESS_IDS){
+    	DWORD p = P.second;
+    	Kill_Background_Process(PROCESS_DICT[p].PI);
+	}
     for(auto id: Cur_Ids)
     {
         TASK id_process = PROCESS_DICT[id];
@@ -255,7 +297,7 @@ void RUN_BGP(CMD cmd)
 	if(cmd.Arg.size() > 2)
     {
         RaiseSyntaxError();
-        cout<<"\n~ ";
+//        cout<<"~ ";
         return;
     }
     int task_num = 1;
@@ -265,7 +307,7 @@ void RUN_BGP(CMD cmd)
 	}
     LPCSTR task = cmd.Arg[0].c_str();
     for(int i=0;i<task_num;i++) PROCESS_INFORMATION bpi = Create_Background_Process(task);
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
@@ -338,13 +380,13 @@ void KILL(CMD cmd)
     	}
     	else Kill_Background_Process(PROCESS_DICT[id].PI);
 	}
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
 void RESUME(string Arg)
 {
-    if(Arg == "all")
+    if(Arg == "-all")
     {
         for(auto P:PROCESS_IDS)
         {
@@ -374,13 +416,14 @@ void RESUME(string Arg)
     }
     else cout<<"Process "<<id<<" is not paused."<<el;
     PROCESS_DICT[id].status = "active";
-    cout<<"\n~ ";
+    cout<<el;
+//    cout<<"\n~ ";
     return;
 }
 
 void PAUSE(string Arg)
 {
-    if(Arg == "all")
+    if(Arg == "-all")
     {
         for(auto P:PROCESS_IDS)
         {
@@ -392,7 +435,7 @@ void PAUSE(string Arg)
             PROCESS_DICT[id].status = "paused";
         }
         cout<<"All processes are paused.\n";
-        cout<<"~ ";
+//        cout<<"~ ";
         return;
     }
     DWORD id = (DWORD) str2int(Arg);
@@ -402,7 +445,7 @@ void PAUSE(string Arg)
     if(task.status != "paused") SuspendThread(pi.hThread);
     PROCESS_DICT[id].status = "paused";
     cout<<"Process "<<id<<" is paused."<<el;
-    cout<<"~ ";
+//    cout<<"~ ";
     return;
 }
 
@@ -412,7 +455,6 @@ void STATUS(DWORD id)
     TASK task = PROCESS_DICT[id];
     cout<<"Status: "<<task.status<<el;
     cout<<"Task: "<<task.Task<<el;
-    cout<<"\n";
 //    cout<<"\n~ ";
     return;
 }
@@ -493,8 +535,6 @@ void DIR(){
     _findclose(handle);
 }
 
-
-
 void DATE_() {
     std::time_t currentTime = std::time(nullptr);
     std::tm* currentDate = std::localtime(&currentTime);
@@ -502,14 +542,14 @@ void DATE_() {
     int month = currentDate->tm_mon + 1;     // months since January [0-11]
     int day = currentDate->tm_mday;          // day of the month [1-31]
     std::cout << "Current Date: " << day << "-" << month << "-" << year << std::endl;
-    cout << "~ ";
+//    cout << "~ ";
 }
 
 void TIME_() {
     std::time_t currentTime = std::time(nullptr);
     std::string timeString = std::ctime(&currentTime);
     std::cout << "Current Time: " << timeString;
-    cout << "~ ";
+//    cout << "~ ";
 }
 
 bool MKDIR(const std::string& directoryPath) {
@@ -524,6 +564,7 @@ bool MKDIR(const std::string& directoryPath) {
         return false;
     }
 }
+
 void MyShell()
 {
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
@@ -539,7 +580,11 @@ void MyShell()
         CMD cmd = get_cmd(cmd_str);
         if(cmd.Type == "exit")
         {
-            EXIT();
+            int check = 0;
+			cout<<"Are you sure you want to exit the shell?\n0:No, 1:Yes\n";
+			cin>>check;
+			if(!check) return;
+			EXIT();
             break;
         }
         if(cmd.Type == "bgp")
@@ -658,11 +703,4 @@ void MyShell()
         //cout<<"~ ";
     }
     return;
-}
-
-int main()
-{
-    MyShell();
-    Cleanse_Background();
-    return 0;
 }
