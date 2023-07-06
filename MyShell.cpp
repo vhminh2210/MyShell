@@ -435,6 +435,18 @@ void TIME_() {
     cout << "~ ";
 }
 
+bool MKDIR(const std::string& directoryPath) {
+    int result = mkdir(directoryPath.c_str());
+
+    // Check the result of the directory creation
+    if (result == 0) {
+        std::cout << "Directory " << directoryPath.c_str() << " created successfully." << std::endl;
+        return true;
+    } else {
+        std::cout << "Failed to create directory " << directoryPath.c_str() << std::endl;
+        return false;
+    }
+}
 void MyShell()
 {
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
@@ -540,6 +552,13 @@ void MyShell()
 				continue;
 			}
 			CD(cmd.Arg[0]);
+			continue;
+		}
+		if (cmd.Type == "mkdir"){
+
+			for(int l = 0; l < cmd.Arg.size();l++){
+				MKDIR(cmd.Arg[l]);
+			}
 			continue;
 		}
         RaiseCmdNotFound();
