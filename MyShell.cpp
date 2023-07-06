@@ -221,7 +221,7 @@ void RaiseSyntaxError()
 
 void RaiseCmdNotFound()
 {
-    cout<<"Command not found."<<el;
+    cout<<"LMS: Command not found."<<el;
 //    cout<<"~ ";
     return;
 }
@@ -532,6 +532,7 @@ void MyShell()
     while(true)
     {
         Cleanse_Background();
+        fflush(stdin);
         std::string currentDir = getCurrentDirectory();
     	std::cout << "LMS " << currentDir << " >> ";
         getline(cin, cmd_str);
@@ -593,7 +594,7 @@ void MyShell()
         }
         if(cmd.Type == "help")
         {
-        	HELP(ROOT_PATH + "documentation.txt");
+        HELP(ROOT_PATH + "documentation.txt");
         	continue;
 		}
 		if(cmd.Type == "bat"){
@@ -638,7 +639,22 @@ void MyShell()
 			}
 			continue;
 		}
-        RaiseCmdNotFound();
+        int permit = 0;
+		printf("Command not found, use system instead?\n");
+		printf("WARNING: This feature may cause random things to happen, please dont blame us!!!\nPermit? ");
+		printf("0:No, 1:Yes\n");
+		scanf("%d",&permit);
+		if (permit){
+			std::string a = cmd.Type.c_str();
+			for(int l = 0; l < cmd.Arg.size();l++){
+				a += " ";
+				a += cmd.Arg[l];
+			}
+			int result = system(a.c_str());
+			if (result==0) continue;
+			else RaiseCmdNotFound();
+		}
+		else RaiseCmdNotFound();
         //cout<<"~ ";
     }
     return;
