@@ -159,7 +159,7 @@ void Kill_Background_Process(PROCESS_INFORMATION pi, bool immediate= true, DWORD
 
     PROCESS_DICT[pi.dwProcessId].Task = "NULL";
     Cur_Ids.erase(pi.dwProcessId);
-
+	cout<<"Background process "<<pi.dwProcessId<<" ended successfully.\n";
     return;
 }
 
@@ -252,16 +252,20 @@ void LIST()
 
 void RUN_BGP(CMD cmd)
 {
-    if(cmd.Arg.size() != 1)
+	if(cmd.Arg.size() > 2)
     {
         RaiseSyntaxError();
+        cout<<"\n~ ";
         return;
     }
+    int task_num = 1;
+    if(cmd.Arg.size() == 2){
+    	int temp = (int) str2int(cmd.Arg[1]);
+    	if(temp>0) task_num = temp;
+	}
     LPCSTR task = cmd.Arg[0].c_str();
-    PROCESS_INFORMATION bpi = Create_Background_Process(task);
-    cout<<"Process created with id: "<<bpi.dwProcessId<<el;
-    cout<<"\n";
-//    cout<<"\n~ ";
+    for(int i=0;i<task_num;i++) PROCESS_INFORMATION bpi = Create_Background_Process(task);
+    cout<<"~ ";
     return;
 }
 
@@ -285,31 +289,55 @@ void RUN_FGP(CMD cmd)
 
 void KILL(CMD cmd)
 {
-    if(cmd.Arg.size() == 0 || cmd.Arg.size() > 2)
-    {
-        RaiseSyntaxError();
-        return;
-    }
-    if(cmd.Arg[0] == "all")
-    {
-        for(auto P:PROCESS_IDS)
-        {
-            DWORD id = P.second;
-            Kill_Background_Process(PROCESS_DICT[id].PI);
-        }
-        cout<<"All process are killed.\n";
-        cout<<"~ ";
-        return;
-    }
-    DWORD id = (DWORD) str2int(cmd.Arg[0]);
-    if(!Check_id_exists(id)) return;
-    if(cmd.Arg.size() > 1)
-    {
-        DWORD t_wait = (DWORD) str2int(cmd.Arg[1]);
-        Kill_Background_Process(PROCESS_DICT[id].PI, false, t_wait);
-    }
-    else Kill_Background_Process(PROCESS_DICT[id].PI);
-    cout<<"Process "<<id<<" is killed."<<el;
+    if(cmd.Arg[0] == "-all"){
+    	DWORD t_wait = 0;
+    	if(cmd.Arg.size()>=2) t_wait = (DWORD) str2int(cmd.Arg[1]);
+    	for(auto P : PROCESS_IDS){
+    		DWORD p = P.second;
+    		Kill_Background_Process(PROCESS_DICT[p].PI,false,t_wait);
+		}
+	}
+	else if(cmd.Arg[0] == "-list"){
+		if(cmd.Arg.size()<2) RaiseSyntaxError();
+		else for(int i=1;i < cmd.Arg.size();i++){
+    		DWORD id = (DWORD) str2int(cmd.Arg[i]);
+			if(!Check_id_exists(id)) cout<<"Process "<<id<<" doesn't exit./n";
+    		else Kill_Background_Process(PROCESS_DICT[id].PI);
+		}
+	}
+	else if(cmd.Arg[0] == "-listwait"){
+		if(cmd.Arg.size()<3) RaiseSyntaxError();
+		else {
+			DWORD t_wait = (DWORD) str2int(cmd.Arg[-1]);
+			for(int i=1;i < cmd.Arg.size()-1;i++){
+    			DWORD id = (DWORD) str2int(cmd.Arg[i]);
+				if(!Check_id_exists(id)) cout<<"Process "<<id<<" doesn't exit.\n";
+    			else Kill_Background_Process(PROCESS_DICT[id].PI);
+			}
+		}
+	}
+	else if(cmd.Arg[0] == "-task"){
+		if(cmd.Arg.size()<2) RaiseSyntaxError();
+    	else {
+    		DWORD t_wait = 0;
+    		if(cmd.Arg.size()>=3) t_wait = (DWORD) str2int(cmd.Arg[2]);
+    		for(auto P : PROCESS_IDS){
+    			DWORD p = P.second;
+    			if(PROCESS_DICT[p].Task==cmd.Arg[1]) Kill_Background_Process(PROCESS_DICT[p].PI,false,t_wait);
+			}
+		}
+	}
+	else if(cmd.Arg.size() == 0 || cmd.Arg.size() > 2) RaiseSyntaxError();
+    else {
+    	DWORD id = (DWORD) str2int(cmd.Arg[0]);
+    	if(!Check_id_exists(id)) return;
+    	if(cmd.Arg.size() > 1)
+    	{
+    	    DWORD t_wait = (DWORD) str2int(cmd.Arg[1]);
+    	    Kill_Background_Process(PROCESS_DICT[id].PI, false, t_wait);
+    	}
+    	else Kill_Background_Process(PROCESS_DICT[id].PI);
+	}
     cout<<"~ ";
     return;
 }
