@@ -10,8 +10,9 @@ NOTE:
 -----------------------
 * exit	                : Exit MyShell
 -----------------------
-* bgp [task]		: Create background process. Support .exe file execution.
+* bgp [task] (task_num)		: Create background process. Support .exe file execution.
 	- task (str)	: Executable file name in the current working directory (cwd)
+	- task_num	: Numbers of processed to be created
 	E.g. 		: bgp HelloWorld.exe
 -----------------------
 * fgp [task] (t_wait)	: Create foreground process. Suppport .exe file execution.
@@ -23,6 +24,10 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 * list	: List running background process in chronological order.
 -----------------------
 * kill [process_id] (t_wait)	: Kill background process
+* kill [-all] (t_wait)		: Kill all background processes
+* kill [-list]			: Kill background processes in the list
+* kill [-listwait] [t_wait]	: Kill background processes in the list
+* kill [-task] (t_wait)		: Kill background processes doing the specific task
 	- process_id (DWORD)	: Background process id
 	- t_wait (ms)		: Waiting time before process termination. The process will run in foreground mode during this duration
 	E.g. 			: kill 1234 5000
