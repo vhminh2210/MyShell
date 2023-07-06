@@ -33,10 +33,12 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 	E.g. 			: kill 1234 5000
 -----------------------
 * pause [process_id]	: Pause specified process (by suspending its prime thread)
+* pause [-all]		: Pause all process (by suspending theirs prime thread)
 	- process_id (DWORD)	: Background process id
 	E.g. 			: pause 1234
 -----------------------
 * resume [process_id]	: Resume specified process (by resumming its prime thread)
+* resume [-all]		: Resume allprocess (by resumming their prime thread)
 	- process_id (DWORD)	: Background process id
 	E.g. 			: resume 1234
 -----------------------
