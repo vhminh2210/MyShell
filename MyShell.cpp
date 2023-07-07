@@ -270,15 +270,15 @@ void EXIT()
     	DWORD p = P.second;
     	Kill_Background_Process(PROCESS_DICT[p].PI);
 	}
-    for(auto id: Cur_Ids)
-    {
-        TASK id_process = PROCESS_DICT[id];
-        PROCESS_INFORMATION id_pi = id_process.PI;
-        DWORD id_status;
-        GetExitCodeProcess(id_pi.hProcess, &id_status);
-        if(id_status == 259) Kill_Background_Process(id_pi);
-    }
-    return;
+//    for(auto id: Cur_Ids)
+//    {
+//        TASK id_process = PROCESS_DICT[id];
+//        PROCESS_INFORMATION id_pi = id_process.PI;
+//        DWORD id_status;
+//        GetExitCodeProcess(id_pi.hProcess, &id_status);
+//        if(id_status == 259) Kill_Background_Process(id_pi);
+//    }
+//    return;
 }
 
 void LIST()
@@ -583,8 +583,7 @@ void MyShell()
             int check = 0;
 			cout<<"Are you sure you want to exit the shell?\n0:No, 1:Yes\n";
 			cin>>check;
-			if(!check) return;
-			EXIT();
+			if(check) EXIT();
             break;
         }
         if(cmd.Type == "bgp")
