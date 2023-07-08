@@ -537,7 +537,7 @@ void FIND(string Query, string mode = "-auto")
         int flag = Find_in_path(Query, "");
         if(flag == 0)
         {
-            cout<<"The queried file is found with path "<<PATH[i] + Query<<el;
+            cout<<"The queried file is found."<<el;
             return;
         }
         cout<<"The queried file is not found."<<el;
