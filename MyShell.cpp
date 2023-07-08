@@ -29,44 +29,8 @@ PROCESS_INFORMATION cur_fgp;
 HANDLE Ctrl_handler;
 bool fgp_interrupt = false;
 
-string ROOT_PATH = ""; // Root directory of shell, for e.g. D:\\IT3070\\MyShell\\
-
-CMD get_cmd(string cmd_str);
-int str2int(string x);
-void Print_CMD(CMD cmd);
-void SIGINT_Handler(int param);
-void Get_signal();
-void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME);
-void Kill_Background_Process(PROCESS_INFORMATION pi, bool immediate, DWORD MAX_TIME);
-PROCESS_INFORMATION Create_Background_Process(LPCSTR task);
-bool Check_id_exists(DWORD id);
-void Cleanse_Background();
-void RaiseSyntaxError();
-void RaiseCmdNotFound();
-void EXIT();
-void LIST();
-void RUN_BGP(CMD cmd);
-void RUN_FGP(CMD cmd);
-void KILL(CMD cmd);
-void RESUME(string Arg);
-void PAUSE(string Arg);
-void STATUS(DWORD id);
-void HELP(const std::string& filename);
-void BATCH(const std::string& filename);
-void CD(const std::string& dir);
-std::string getCurrentDirectory();
-void DIR();
-void DATE_();
-void TIME_();
-bool MKDIR(const std::string& directoryPath);
-void MyShell();
-
-int main()
-{
-    MyShell();
-    Cleanse_Background();
-    return 0;
-}
+string ROOT_PATH = ""; /* Root directory of shell, for e.g. D:\\IT3070\\MyShell\\ */
+vector<string> PATH;
 
 CMD get_cmd(string cmd_str)
 {
@@ -196,7 +160,7 @@ void Kill_Background_Process(PROCESS_INFORMATION pi, bool immediate= true, DWORD
 
     PROCESS_DICT[pi.dwProcessId].Task = "NULL";
     Cur_Ids.erase(pi.dwProcessId);
-	cout<<"Background process "<<pi.dwProcessId<<" ended successfully.\n";
+
     return;
 }
 
@@ -214,8 +178,7 @@ PROCESS_INFORMATION Create_Background_Process(LPCSTR task)
     PROCESS_IDS.insert(make_pair(++cnt_history, pi.dwProcessId));
     Cur_Ids.insert(pi.dwProcessId);
     PROCESS_DICT[pi.dwProcessId] = cur_task;
-    if(pi.dwProcessId == 0 && pi.dwThreadId == 0) cout<<"Background process created unsuccessfully.\n";
-	else cout<<"Background process "<<pi.dwProcessId<<" created successfully.\n";
+
     return pi;
 }
 
@@ -259,26 +222,22 @@ void RaiseSyntaxError()
 
 void RaiseCmdNotFound()
 {
-    cout<<"LMS: Command not found."<<el;
+    cout<<"Command not found."<<el;
 //    cout<<"~ ";
     return;
 }
 
 void EXIT()
 {
-	for(auto P : PROCESS_IDS){
-    	DWORD p = P.second;
-    	Kill_Background_Process(PROCESS_DICT[p].PI);
-	}
-//    for(auto id: Cur_Ids)
-//    {
-//        TASK id_process = PROCESS_DICT[id];
-//        PROCESS_INFORMATION id_pi = id_process.PI;
-//        DWORD id_status;
-//        GetExitCodeProcess(id_pi.hProcess, &id_status);
-//        if(id_status == 259) Kill_Background_Process(id_pi);
-//    }
-//    return;
+    for(auto id: Cur_Ids)
+    {
+        TASK id_process = PROCESS_DICT[id];
+        PROCESS_INFORMATION id_pi = id_process.PI;
+        DWORD id_status;
+        GetExitCodeProcess(id_pi.hProcess, &id_status);
+        if(id_status == 259) Kill_Background_Process(id_pi);
+    }
+    return;
 }
 
 void LIST()
@@ -294,20 +253,16 @@ void LIST()
 
 void RUN_BGP(CMD cmd)
 {
-	if(cmd.Arg.size() > 2)
+    if(cmd.Arg.size() != 1)
     {
         RaiseSyntaxError();
-//        cout<<"~ ";
         return;
     }
-    int task_num = 1;
-    if(cmd.Arg.size() == 2){
-    	int temp = (int) str2int(cmd.Arg[1]);
-    	if(temp>0) task_num = temp;
-	}
     LPCSTR task = cmd.Arg[0].c_str();
-    for(int i=0;i<task_num;i++) PROCESS_INFORMATION bpi = Create_Background_Process(task);
-//    cout<<"~ ";
+    PROCESS_INFORMATION bpi = Create_Background_Process(task);
+    cout<<"Process created with id: "<<bpi.dwProcessId<<el;
+    cout<<"\n";
+//    cout<<"\n~ ";
     return;
 }
 
@@ -331,62 +286,38 @@ void RUN_FGP(CMD cmd)
 
 void KILL(CMD cmd)
 {
-    if(cmd.Arg[0] == "-all"){
-    	DWORD t_wait = 0;
-    	if(cmd.Arg.size()>=2) t_wait = (DWORD) str2int(cmd.Arg[1]);
-    	for(auto P : PROCESS_IDS){
-    		DWORD p = P.second;
-    		Kill_Background_Process(PROCESS_DICT[p].PI,false,t_wait);
-		}
-	}
-	else if(cmd.Arg[0] == "-list"){
-		if(cmd.Arg.size()<2) RaiseSyntaxError();
-		else for(int i=1;i < cmd.Arg.size();i++){
-    		DWORD id = (DWORD) str2int(cmd.Arg[i]);
-			if(!Check_id_exists(id)) cout<<"Process "<<id<<" doesn't exit./n";
-    		else Kill_Background_Process(PROCESS_DICT[id].PI);
-		}
-	}
-	else if(cmd.Arg[0] == "-listwait"){
-		if(cmd.Arg.size()<3) RaiseSyntaxError();
-		else {
-			DWORD t_wait = (DWORD) str2int(cmd.Arg[-1]);
-			for(int i=1;i < cmd.Arg.size()-1;i++){
-    			DWORD id = (DWORD) str2int(cmd.Arg[i]);
-				if(!Check_id_exists(id)) cout<<"Process "<<id<<" doesn't exit.\n";
-    			else Kill_Background_Process(PROCESS_DICT[id].PI);
-			}
-		}
-	}
-	else if(cmd.Arg[0] == "-task"){
-		if(cmd.Arg.size()<2) RaiseSyntaxError();
-    	else {
-    		DWORD t_wait = 0;
-    		if(cmd.Arg.size()>=3) t_wait = (DWORD) str2int(cmd.Arg[2]);
-    		for(auto P : PROCESS_IDS){
-    			DWORD p = P.second;
-    			if(PROCESS_DICT[p].Task==cmd.Arg[1]) Kill_Background_Process(PROCESS_DICT[p].PI,false,t_wait);
-			}
-		}
-	}
-	else if(cmd.Arg.size() == 0 || cmd.Arg.size() > 2) RaiseSyntaxError();
-    else {
-    	DWORD id = (DWORD) str2int(cmd.Arg[0]);
-    	if(!Check_id_exists(id)) return;
-    	if(cmd.Arg.size() > 1)
-    	{
-    	    DWORD t_wait = (DWORD) str2int(cmd.Arg[1]);
-    	    Kill_Background_Process(PROCESS_DICT[id].PI, false, t_wait);
-    	}
-    	else Kill_Background_Process(PROCESS_DICT[id].PI);
-	}
-//    cout<<"~ ";
+    if(cmd.Arg.size() == 0 || cmd.Arg.size() > 2)
+    {
+        RaiseSyntaxError();
+        return;
+    }
+    if(cmd.Arg[0] == "all")
+    {
+        for(auto P:PROCESS_IDS)
+        {
+            DWORD id = P.second;
+            Kill_Background_Process(PROCESS_DICT[id].PI);
+        }
+        cout<<"All process are killed.\n";
+        cout<<"~ ";
+        return;
+    }
+    DWORD id = (DWORD) str2int(cmd.Arg[0]);
+    if(!Check_id_exists(id)) return;
+    if(cmd.Arg.size() > 1)
+    {
+        DWORD t_wait = (DWORD) str2int(cmd.Arg[1]);
+        Kill_Background_Process(PROCESS_DICT[id].PI, false, t_wait);
+    }
+    else Kill_Background_Process(PROCESS_DICT[id].PI);
+    cout<<"Process "<<id<<" is killed."<<el;
+    cout<<"~ ";
     return;
 }
 
 void RESUME(string Arg)
 {
-    if(Arg == "-all")
+    if(Arg == "all")
     {
         for(auto P:PROCESS_IDS)
         {
@@ -416,14 +347,13 @@ void RESUME(string Arg)
     }
     else cout<<"Process "<<id<<" is not paused."<<el;
     PROCESS_DICT[id].status = "active";
-    cout<<el;
-//    cout<<"\n~ ";
+    cout<<"\n~ ";
     return;
 }
 
 void PAUSE(string Arg)
 {
-    if(Arg == "-all")
+    if(Arg == "all")
     {
         for(auto P:PROCESS_IDS)
         {
@@ -435,7 +365,7 @@ void PAUSE(string Arg)
             PROCESS_DICT[id].status = "paused";
         }
         cout<<"All processes are paused.\n";
-//        cout<<"~ ";
+        cout<<"~ ";
         return;
     }
     DWORD id = (DWORD) str2int(Arg);
@@ -445,7 +375,7 @@ void PAUSE(string Arg)
     if(task.status != "paused") SuspendThread(pi.hThread);
     PROCESS_DICT[id].status = "paused";
     cout<<"Process "<<id<<" is paused."<<el;
-//    cout<<"~ ";
+    cout<<"~ ";
     return;
 }
 
@@ -455,6 +385,7 @@ void STATUS(DWORD id)
     TASK task = PROCESS_DICT[id];
     cout<<"Status: "<<task.status<<el;
     cout<<"Task: "<<task.Task<<el;
+    cout<<"\n";
 //    cout<<"\n~ ";
     return;
 }
@@ -494,7 +425,7 @@ void BATCH(const std::string& filename) {
 void CD(const std::string& dir){
 	const char* directory = dir.c_str();
 	int result = chdir(directory);
-    
+
     // Check the result of the directory change
     if (result == 0) {
         return;
@@ -503,7 +434,7 @@ void CD(const std::string& dir){
 //        cout << "~ ";
         return;
     }
-	
+
 }
 
 std::string getCurrentDirectory() {
@@ -533,7 +464,10 @@ void DIR(){
     } while (_findnext(handle, &fileInfo) == 0);
 
     _findclose(handle);
+    return;
 }
+
+
 
 void DATE_() {
     std::time_t currentTime = std::time(nullptr);
@@ -542,14 +476,14 @@ void DATE_() {
     int month = currentDate->tm_mon + 1;     // months since January [0-11]
     int day = currentDate->tm_mday;          // day of the month [1-31]
     std::cout << "Current Date: " << day << "-" << month << "-" << year << std::endl;
-//    cout << "~ ";
+    cout << "~ ";
 }
 
 void TIME_() {
     std::time_t currentTime = std::time(nullptr);
     std::string timeString = std::ctime(&currentTime);
     std::cout << "Current Time: " << timeString;
-//    cout << "~ ";
+    cout << "~ ";
 }
 
 bool MKDIR(const std::string& directoryPath) {
@@ -565,25 +499,87 @@ bool MKDIR(const std::string& directoryPath) {
     }
 }
 
+int Find_in_path(string Query, string PATH)
+{
+    // Q = (char *) Query;
+    Query = PATH + Query;
+    char Q[Query.length() + 2];
+    for(int i=0;i<Query.length();++i) Q[i] = Query[i];
+
+    LPCSTR lpQuery = (LPCSTR) Q;
+    WIN32_FIND_DATA lpResult;
+    HANDLE hFind = FindFirstFileA(lpQuery, &lpResult);
+
+    int flag = 0;
+
+    if(hFind == INVALID_HANDLE_VALUE)
+    {
+        if(GetLastError() == ERROR_FILE_NOT_FOUND) flag = -1;
+        else flag = GetLastError();
+        FindClose(hFind);
+        return flag;
+    }
+    FindClose(hFind);
+    return 0;
+}
+
+void FIND(string Query, string mode = "-auto")
+{
+    if(mode != "-auto" && mode != "-path")
+    {
+        RaiseSyntaxError();
+        cout<<el;
+        return;
+    }
+
+    if(mode == "-path")
+    {
+        int flag = Find_in_path(Query, "");
+        if(flag == 0)
+        {
+            cout<<"The queried file is found with path "<<PATH[i] + Query<<el;
+            return;
+        }
+        cout<<"The queried file is not found."<<el;
+        return;
+    }
+
+    for(int i=0;i<PATH.size();++i)
+    {
+        int flag = Find_in_path(Query, PATH[i]);
+        if(flag == 0)
+        {
+            cout<<"The queried file is found with path "<<PATH[i] + Query<<el;
+            return;
+        }
+    }
+    cout<<"The queried file is not found."<<el;
+    return;
+}
+
+void PATH()
+{
+    for(int i=0;i<PATH.size();++i) cout<<PATH[i]<<el;
+    cout<<"----------END OF PATH ENVIRONMENT LIST----------\n";
+    return;
+}
+
 void MyShell()
 {
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
     string cmd_str;
-    
+    ROOT_PATH = getCurrentDirectory();
+
     while(true)
     {
         Cleanse_Background();
-        fflush(stdin);
         std::string currentDir = getCurrentDirectory();
     	std::cout << "LMS " << currentDir << " >> ";
         getline(cin, cmd_str);
         CMD cmd = get_cmd(cmd_str);
         if(cmd.Type == "exit")
         {
-            int check = 0;
-			cout<<"Are you sure you want to exit the shell?\n0:No, 1:Yes\n";
-			cin>>check;
-			if(check) EXIT();
+            EXIT();
             break;
         }
         if(cmd.Type == "bgp")
@@ -638,7 +634,7 @@ void MyShell()
         }
         if(cmd.Type == "help")
         {
-        HELP(ROOT_PATH + "documentation.txt");
+        	HELP(ROOT_PATH + "documentation.txt");
         	continue;
 		}
 		if(cmd.Type == "bat"){
@@ -683,23 +679,25 @@ void MyShell()
 			}
 			continue;
 		}
-        int permit = 0;
-		printf("Command not found, use system instead?\n");
-		printf("WARNING: This feature may cause random things to happen, please dont blame us!!!\nPermit? ");
-		printf("0:No, 1:Yes\n");
-		scanf("%d",&permit);
-		if (permit){
-			std::string a = cmd.Type.c_str();
-			for(int l = 0; l < cmd.Arg.size();l++){
-				a += " ";
-				a += cmd.Arg[l];
-			}
-			int result = system(a.c_str());
-			if (result==0) continue;
-			else RaiseCmdNotFound();
-		}
-		else RaiseCmdNotFound();
+		if (cmd.Type == "find")
+        {
+            if(cmd.Arg.size() > 2)
+            {
+                RaiseSyntaxError();
+                continue;
+            }
+            FIND(cmd.Arg[0], cmd.Arg[1]);
+            continue;
+        }
+        RaiseCmdNotFound();
         //cout<<"~ ";
     }
     return;
+}
+
+int main()
+{
+    MyShell();
+    Cleanse_Background();
+    return 0;
 }
