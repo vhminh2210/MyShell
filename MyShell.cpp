@@ -523,8 +523,12 @@ int Find_in_path(string Query, string PATH)
     return 0;
 }
 
-void FIND(string Query, string mode = "-auto")
+void FIND(CMD cmd)
 {
+    string Query = cmd.Arg[0];
+    string mode = "-auto";
+    if(cmd.Arg.size() == 2) mode = cmd.Arg[1];
+
     if(mode != "-auto" && mode != "-path")
     {
         RaiseSyntaxError();
@@ -557,7 +561,7 @@ void FIND(string Query, string mode = "-auto")
     return;
 }
 
-void PATH()
+void PATH_()
 {
     for(int i=0;i<PATH.size();++i) cout<<PATH[i]<<el;
     cout<<"----------END OF PATH ENVIRONMENT LIST----------\n";
@@ -568,7 +572,8 @@ void MyShell()
 {
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
     string cmd_str;
-    ROOT_PATH = getCurrentDirectory();
+    ROOT_PATH = getCurrentDirectory() + "\\";
+    PATH.push_back(ROOT_PATH);
 
     while(true)
     {
@@ -686,7 +691,7 @@ void MyShell()
                 RaiseSyntaxError();
                 continue;
             }
-            FIND(cmd.Arg[0], cmd.Arg[1]);
+            FIND(cmd);
             continue;
         }
         RaiseCmdNotFound();
