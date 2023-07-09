@@ -8,63 +8,66 @@ NOTE:
 
 * help                  : Display this help message.
 -----------------------
-* exit	                : Exit MyShell
+* exit	                : Exit MyShell.
 -----------------------
-* bgp [task] (task_num)		: Create background process. Support .exe file execution.
-	- task (str)	: Executable file name in the current working directory (cwd)
-	- task_num	: Numbers of processed to be created
-	E.g. 		: bgp HelloWorld.exe
+* bgp [task] (task_num)	: Create background process. Support .exe file execution.
+	- task (str)	: Executable file name in the current working directory (cwd).
+	- task_num	: Numbers of processed to be created.
+	E.g. 		: bgp HelloWorld.exe.
 -----------------------
 * fgp [task] (t_wait)	: Create foreground process. Suppport .exe file execution.
-	- task (str)	: Executable file name in the current working directory (cwd)
-	- t_wait (ms)	: Waiting time before process termination. The process will run in foreground mode during this duration
-	E.g. 		: fgp HelloWorld.exe 10000
+	- task (str)	: Executable file name in the current working directory (cwd).
+	- t_wait (ms)	: Waiting time before process termination. The process will run in foreground mode during this duration.
+	E.g. 		: fgp HelloWorld.exe 10000.
 The foreground process can be interupt by a Ctrl-C signal from its active window.
 -----------------------
 * list	: List running background process in chronological order.
 -----------------------
-* kill [process_id] (t_wait)	: Kill background process
-* kill [-all] (t_wait)		: Kill all background processes
-* kill [-list]			: Kill background processes in the list
-* kill [-listwait] [t_wait]	: Kill background processes in the list
-* kill [-task] (t_wait)		: Kill background processes doing the specific task
-	- process_id (DWORD)	: Background process id
-	- t_wait (ms)		: Waiting time before process termination. The process will run in foreground mode during this duration
-	E.g. 			: kill 1234 5000
+* kill [process_id] (t_wait)	: Kill background process.
+* kill [-all] (t_wait) (-apart)	: Kill all background processes.
+* kill [-list] [process_id...]	: Kill background processes in the list.
+	(-wait [t_wait]) (-apart)
+* kill [-task] (t_wait) (-apart): Kill background processes doing the specific task.
+	- process_id (DWORD)	: Background process id.
+	- t_wait (ms)		: Waiting time before process termination. The process will run in foreground mode during this duration.
+	-wait			: Denote that the kill -list command has waiting time.
+	-apart			: Denote that all processes get killed t_wait (ms) apart.
+	E.g. 			: kill 1234 5000.
 -----------------------
-* pause [process_id]	: Pause specified process (by suspending its prime thread)
-* pause [-all]		: Pause all process (by suspending theirs prime thread)
-	- process_id (DWORD)	: Background process id
-	E.g. 			: pause 1234
+* pause [process_id]	: Pause specified process (by suspending its prime thread).
+* pause [-all]		: Pause all process (by suspending theirs prime thread).
+	- process_id (DWORD)	: Background process id.
+	E.g. 			: pause 1234.
 -----------------------
-* resume [process_id]	: Resume specified process (by resumming its prime thread)
-* resume [-all]		: Resume allprocess (by resumming their prime thread)
-	- process_id (DWORD)	: Background process id
-	E.g. 			: resume 1234
+* resume [process_id]	: Resume specified process (by resumming its prime thread).
+* resume [-all]		: Resume allprocess (by resumming their prime thread).
+	- process_id (DWORD)	: Background process id.
+	E.g. 			: resume 1234.
 -----------------------
-* status [process_id]	: Get specified process status
-	- process_id (DWORD)	: Background process id
-	E.g. 			: status 1234
+* status [process_id]	: Get specified process status.
+	- process_id (DWORD)	: Background process id.
+	E.g. 			: status 1234.
 -----------------------
-* bat    [filename]             : Run the specified .bat file
-        - filename              : The name of the .bat file
-	E.g.                    : bat example.bat
-				  bat example
+* bat    [filename]             : Run the specified .bat file.
+        - filename              : The name of the .bat file.
+	E.g.                    : bat example.bat.
+				  bat example.
 -----------------------
-* date                 : Print out the date in D-M-YYYY format
+* date	: Print out the date in D-M-YYYY format.
 -----------------------
-* time                 : Print out the time and date
+* time	: Print out the time and date.
 -----------------------
-* dir                  : List the directories as well as files
+* dir	: List the directories as well as files.
 -----------------------
-* cd     [dir_name]    : Change working directory
-	- dir_name              : name of the directory
+* cd [dir_name]		: Change working directory.
+	- dir_name	: name of the directory.
 -----------------------
-* mkdir (dir_list)     : Make new directories
-	- dir_list              : list of directories
-	E.g.                    : mkdir obama osama binladen
+* mkdir (dir_list)	: Make new directories
+	- dir_list	: list of directories.
+	E.g.		: mkdir obama osama binladen.
 -----------------------
-* find	[filename] (-mode) : Find file with name/path 'filename'.
-	- filename	   : Query file name
-	- mode	   	   : -auto (default): find 'filename' in PATH
-			     -path	    : find 'filename' by its absolute path. The 'filename' must be given in absolute path form.
+* find [name] (-path [path]) (-all)	: Find file/folder with name/path <name>.
+	- name	   			: Query file/folder name.
+	-auto (default)			: find <name> in PATH and their sub directory.
+	-path	    			: find <name> in <path> and its sub directory.
+	-all				: find all file/folder with name <name> in PATH, <path> and their sub directory.

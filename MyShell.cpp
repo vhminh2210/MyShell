@@ -61,7 +61,7 @@ void DATE_();
 void TIME_();
 bool MKDIR(const std::string& directoryPath);
 void get_subdir(stack<string> &subdir, string path);
-int Find_in_path(string Query, string PATH);
+int Find_in_path(string Query, string path, set<string> &path_found, bool all);
 void FIND(CMD cmd);
 void PATH_();
 void MyShell();
@@ -587,55 +587,53 @@ bool MKDIR(const std::string& directoryPath) {
 
 void get_subdir(stack<string> &subdir, string path){
     WIN32_FIND_DATA lpResult;
-    string path_in = path + "*.*";
-    char path_out[path_in.length()+2];
-    for(int i=0;i<path_in.length();++i) path_out[i] = path_in[i];
-    LPCSTR path_temp = (LPCSTR) path_out;
-    HANDLE hFind = FindFirstFileA(path_temp, &lpResult);
+    string path_string = path + "*.*";
+    LPCSTR path_LPCSTR = (LPCSTR) path_string.c_str();
+    HANDLE hFind = FindFirstFileA(path_LPCSTR, &lpResult);
     do{
         if (lpResult.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY){
-            if(lpResult.cFileName != "." && lpResult.cFileName != "."){
-                subdir.push(path + (string) lpResult.cFileName);
+            string dir = (char*) lpResult.cFileName;
+            if(dir != "." && dir != ".."){
+                subdir.push(path + dir + '\\');
             }
         }
     }while (FindNextFile(hFind, &lpResult) != 0);
 }
 
-int Find_in_path(string Query, string path)
+int Find_in_path(string Query, string path, set<string> &path_found, bool all = false)
 {
-    Query = path + Query;
-    char Q[Query.length() + 2];
-    for(int i=0;i<Query.length();++i) Q[i] = Query[i];
-    LPCSTR lpQuery = (LPCSTR) Q;
+    bool found = false;
+    int flag = 0;
+    string path_Query = path + Query;
+    LPCSTR lpQuery = (LPCSTR) path_Query.c_str();
     WIN32_FIND_DATA lpResult;
     HANDLE hFind = FindFirstFileA(lpQuery, &lpResult);
+    if(hFind != INVALID_HANDLE_VALUE){
+        path_found.insert(path);
+        found = true;
+    }else flag = GetLastError();
 
-    // if(hFind == INVALID_HANDLE_VALUE){
-    //     stack<string> subdir;
-    //     while(!subdir.empty()){
-    //         get_subdir(subdir, path);
-    //         path = subdir.top();
-    //         subdir.pop();
-    //         Query = path + Query;
-    //         char P[Query.length() + 2];
-    //         for(int i=0;i<Query.length();++i) P[i] = Query[i];
-    //         lpQuery = (LPCSTR) P;
-    //         hFind = FindFirstFileA(lpQuery, &lpResult);
-    //         if(hFind != INVALID_HANDLE_VALUE) break;
-    //     }
-    // }
-    
-    int flag = 0;
-
-    if(hFind == INVALID_HANDLE_VALUE)
-    {
-        if(GetLastError() == ERROR_FILE_NOT_FOUND) flag = -1;
-        else flag = GetLastError();
-        FindClose(hFind);
-        return flag;
+    if(flag == 2||all){// flag == 2: file not found
+        stack<string> subdir;
+        get_subdir(subdir, path);
+        while(!subdir.empty()){
+            path = subdir.top();
+            subdir.pop();
+            path_Query = path + Query;
+            lpQuery = (LPCSTR) path_Query.c_str();
+            hFind = FindFirstFileA(lpQuery, &lpResult);
+            if(hFind != INVALID_HANDLE_VALUE){
+                path_found.insert(path);
+                found = true;
+                if(!all) break;
+            }
+            get_subdir(subdir, path);
+        }
     }
+
+    if(found) flag = 0;
     FindClose(hFind);
-    return 0;
+    return flag;
 }
 
 void FIND(CMD cmd)
@@ -646,33 +644,36 @@ void FIND(CMD cmd)
         cout<<el;
         return;
     }
+    set<string> path_found;
     string Query = cmd.Arg[0];
     string mode = "-auto";
-    bool check_all = false, check_path = false;
-    int end = cmd.Arg.size();
+    bool check_all = false, check_path = false, found = false;
+    int end = cmd.Arg.size(), flag;
     if(cmd.Arg.size() >=3 && cmd.Arg[end-1] == "-all") check_all = true;
     if(cmd.Arg.size() >=3 && cmd.Arg[1] == "-path") check_path = true;
-    if(check_path)
-    {
+    if(check_path){
         string path = cmd.Arg[2];
         if(path[path.length()-1]!='\\') path = path + '\\';
-        int flag = Find_in_path(Query, path);
-        if(flag == 0) cout<<"The queried file is found in "<<path<<"."<<el;
-        else cout<<"The queried file is not found in "<<path<<"."<<el;
-        if(!check_all) return;
+        flag = Find_in_path(Query, path, path_found, check_all);
+        if(!flag){
+            cout<<"The queried file/folder is found in "<<path<<"."<<el;
+            found = true;
+        }else if(flag == 3) cout<<"Path "<<path<<" not found."<<el;
+        else cout<<"The queried file/folder is not found in "<<path<<"."<<el;
     }
 
-    for(int i=0;i<PATH.size();++i)
-    {
-        int flag = Find_in_path(Query, PATH[i]);
-        if(flag == 0)
-        {
-            cout<<"The queried file is found with path "<<PATH[i] + Query<<el;
-            if(!check_all) return;
-        }
-        else cout<<"The queried file is not found in "<<PATH[i]<<"."<<el;
+    if(check_all||!check_path)for(int i=0;i<PATH.size();++i){
+        flag = Find_in_path(Query, PATH[i], path_found, check_all);
+        if(!flag){
+            cout<<"The queried file/folder is found with path "<<PATH[i] + Query<<el;
+            found = true;
+            if(!check_all) break;
+        }else if(flag == 3) cout<<"Path "<<PATH[i]<<" not found."<<el;
+        else cout<<"The queried file/folder is not found in "<<PATH[i]<<"."<<el;
     }
-    cout<<"The queried file is not found."<<el;
+    if(!found) cout<<"The queried file/folder is not found."<<el;
+    cout<<"The queried file/folder is found in:"<<el;
+    for(set<string>::iterator it = path_found.begin();it != path_found.end();it++) cout<<*it<<el;
     return;
 }
 
