@@ -30,7 +30,7 @@ HANDLE Ctrl_handler;
 bool fgp_interrupt = false;
 
 string ROOT_PATH = ""; // Root directory of shell, for e.g. D:\\IT3070\\MyShell\\ //
-vector<string> PATH;
+set<string> PATH;
 
 CMD get_cmd(string cmd_str);
 int str2int(string x);
@@ -63,6 +63,8 @@ bool MKDIR(const std::string& directoryPath);
 void get_subdir(stack<string> &subdir, string path);
 int Find_in_path(string Query, string path, set<string> &path_found, bool all);
 void FIND(CMD cmd);
+bool path_exists(string path);
+void load_paths(char*file_path);
 void PATH_();
 void MyShell();
 
@@ -380,6 +382,7 @@ void KILL(CMD cmd)
     		DWORD t_wait = 0;
             bool apart = false;
     		if(cmd.Arg.size()>=3) t_wait = (DWORD) str2int(cmd.Arg[2]);
+            if(cmd.Arg.size()>=4&&cmd.Arg[2]=="-apart") apart = true;
     		for(auto P : PROCESS_IDS){
     			DWORD p = P.second;
     			if(PROCESS_DICT[p].Task==cmd.Arg[1]){
@@ -514,7 +517,7 @@ void BATCH(const std::string& filename) {
 void CD(const std::string& dir){
 	const char* directory = dir.c_str();
 	int result = chdir(directory);
-
+    
     // Check the result of the directory change
     if (result == 0) {
         return;
@@ -523,7 +526,7 @@ void CD(const std::string& dir){
 //        cout << "~ ";
         return;
     }
-
+	
 }
 
 std::string getCurrentDirectory() {
@@ -613,7 +616,7 @@ int Find_in_path(string Query, string path, set<string> &path_found, bool all = 
         found = true;
     }else flag = GetLastError();
 
-    if(flag == 2||all){// flag == 2: file not found
+    if(flag == 2||all){// flag == 2: ERROR_FILE_NOT_FOUND
         stack<string> subdir;
         get_subdir(subdir, path);
         while(!subdir.empty()){
@@ -660,32 +663,101 @@ void FIND(CMD cmd)
             found = true;
         }else if(flag == 3) cout<<"Path "<<path<<" not found."<<el;
         else cout<<"The queried file/folder is not found in "<<path<<"."<<el;
-        return;
     }
 
-    if(check_all||!check_path)for(int i=0;i<PATH.size();++i){
-        flag = Find_in_path(Query, PATH[i], path_found, check_all);
+    if(check_all||!check_path)for(set<string>::iterator P = PATH.begin();P != PATH.end();P++){
+        flag = Find_in_path(Query, *P, path_found, check_all);
         if(!flag){
-            //cout<<"The queried file/folder is found with path "<<PATH[i] + Query<<el;
+            // cout<<"The queried file/folder is found with path "<<*P + Query<<el;
             found = true;
             if(!check_all) break;
-        }else if(flag == 3) cout<<"Path "<<PATH[i]<<" not found."<<el;
-        else cout<<"The queried file/folder is not found in "<<PATH[i]<<"."<<el;
+        }
+        // else if(flag == 3) cout<<"Path "<<*P<<" not found."<<el;
+        // else cout<<"The queried file/folder is not found in "<<*P<<"."<<el;
     }
-    if(!found)
-    {
-        cout<<"The queried file/folder is not found."<<el;
-        return;
+    if(!found) cout<<"The queried file/folder is not found."<<el;
+    else{
+        cout<<"The queried file/folder is found in:"<<el;
+        for(set<string>::iterator pf = path_found.begin();pf != path_found.end();pf++) cout<<*pf<<el;
     }
-    cout<<"The queried file/folder is found in:"<<el;
-    for(set<string>::iterator it = path_found.begin();it != path_found.end();it++) cout<<*it<<el;
+
     return;
 }
 
-void PATH_()
+bool path_exists(string path)
 {
-    for(int i=0;i<PATH.size();++i) cout<<PATH[i]<<el;
-    cout<<"----------END OF PATH ENVIRONMENT LIST----------\n";
+    string path_Query = path + "*.*";
+    LPCSTR lpQuery = (LPCSTR) path_Query.c_str();
+    WIN32_FIND_DATA lpResult;
+    HANDLE hFind = FindFirstFileA(lpQuery, &lpResult);
+    return hFind != INVALID_HANDLE_VALUE;
+}
+
+void load_paths(char*file_path)
+{
+    FILE*file = fopen(file_path,"r");
+    if(file == NULL){
+        cout<<"Load file unsuccessfully"<<el;
+        return;
+    }
+    string path = "";
+    while(1){
+        char*temp;
+        fread(temp,sizeof(char),1,file);
+        if(feof(file)) break;
+        if(strcmp(temp,"\n")) path = path + temp;
+        else{
+            PATH.insert(path);
+            cout<<path<<el;
+            path = "";
+        }
+    }
+    fclose(file);
+}
+
+void PATH_(CMD cmd)
+{
+    if(cmd.Arg.size()>=2 && cmd.Arg[0]=="-insert"){
+        string path = cmd.Arg[1];
+        if(path[path.length()-1]!='\\') path = path + '\\';
+        if(path_exists(path)) PATH.insert(path);
+        else {
+            char check = ' ';
+            cout<<"Path "<<path<<" is invalid. Insert anyway?\nY/y: Yes, Anything else: No\n";
+            cin>>check;
+            if(check=='y' || check=='Y') PATH.insert(path);
+        }
+    }else if(cmd.Arg.size()>=2 && cmd.Arg[0]=="-remove"){
+        string path = cmd.Arg[1];
+        if(path[path.length()-1]!='\\') path = path + '\\';
+        std::set<string>::iterator P = PATH.find(path);
+        if(*P==ROOT_PATH){
+            char check = ' ';
+            cout<<"This is the root path. Are you sure you want to remove?\nY/y: Yes, Anything else: No\n";
+            cin>>check;
+            if(check=='y' || check=='Y') PATH.erase(P);
+        }else if(P!=PATH.end()) PATH.erase(P);
+    }else if(cmd.Arg.size()>=1 && cmd.Arg[0]=="-reset"){
+        PATH.clear();
+        PATH.insert(ROOT_PATH);
+    }else if(cmd.Arg.size()>=2 && cmd.Arg[0]=="-load"){
+        string file_path = cmd.Arg[1];
+        load_paths((char*) file_path.c_str());
+    }else{
+        for(set<string>::iterator P = PATH.begin();P != PATH.end();P++){
+            if(*P==ROOT_PATH) cout<<"(root) ";
+            cout<<*P<<el;
+        }
+        // cout<<"----------END OF PATH ENVIRONMENT LIST----------\n";
+    }
+    string path = ROOT_PATH + "path.txt";
+    FILE*file = fopen(path.c_str(),"w");
+    for(set<string>::iterator P = PATH.begin();P != PATH.end();P++){
+        char*p = (char*) (*P).c_str(), *ln = "\n";
+        fwrite(p,sizeof(char),strlen(p),file);
+        fwrite(ln,sizeof(char),1,file);
+    }
+    fclose(file);
     return;
 }
 
@@ -694,8 +766,10 @@ void MyShell()
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
     string cmd_str;
     ROOT_PATH = getCurrentDirectory() + "\\";
-    PATH.push_back(ROOT_PATH);
-
+    PATH.insert(ROOT_PATH);
+    string temp = ROOT_PATH +"path.txt";
+    load_paths((char*) temp.c_str());
+    
     while(true)
     {
         Cleanse_Background();
@@ -706,10 +780,10 @@ void MyShell()
         CMD cmd = get_cmd(cmd_str);
         if(cmd.Type == "exit")
         {
-            int check = 0;
-			cout<<"Are you sure you want to exit the shell?\n0:No, 1:Yes\n";
-			cin>>check;
-			if(check) EXIT();
+            char check = ' ';
+			cout<<"Are you sure you want to exit the shell?\nY/y: Yes, Anything else: No\n";
+            cin>>check;
+            if(check=='y' || check=='Y') EXIT();
             break;
         }
         if(cmd.Type == "bgp")
@@ -819,22 +893,34 @@ void MyShell()
             FIND(cmd);
             continue;
         }
-        int permit = 0;
-		printf("Command not found, use system instead?\n");
-		printf("WARNING: This feature may cause random things to happen, please dont blame us!!!\nPermit? ");
-		printf("0:No, 1:Yes\n");
-		scanf("%d",&permit);
-		if (permit){
-			std::string a = cmd.Type.c_str();
-			for(int l = 0; l < cmd.Arg.size();l++){
-				a += " ";
-				a += cmd.Arg[l];
-			}
-			int result = system(a.c_str());
-			if (result==0) continue;
-			else RaiseCmdNotFound();
-		}
-		else RaiseCmdNotFound();
+        if (cmd.Type == "path")
+        {
+            if(cmd.Arg.size() > 4)
+            {
+                RaiseSyntaxError();
+                continue;
+            }
+            PATH_(cmd);
+            continue;
+        }
+        if (cmd.Type == "system"){
+            char permit = ' ';
+            printf("WARNING: This feature may cause random things to happen.\nPermit? ");
+            printf("Y/y: Yes, Anything else: No\n");
+            scanf("%c",&permit);
+            if (permit=='y' || permit=='Y'){
+                std::string a = cmd.Type.c_str();
+                for(int l = 0; l < cmd.Arg.size();l++){
+                    a += " ";
+                    a += cmd.Arg[l];
+                }
+                int result = system(a.c_str());
+                if (result==0) continue;
+                else RaiseCmdNotFound();
+            }
+            continue;
+        }
+		RaiseCmdNotFound();
         //cout<<"~ ";
     }
     return;
