@@ -514,7 +514,7 @@ void BATCH(const std::string& filename) {
 void CD(const std::string& dir){
 	const char* directory = dir.c_str();
 	int result = chdir(directory);
-    
+
     // Check the result of the directory change
     if (result == 0) {
         return;
@@ -523,7 +523,7 @@ void CD(const std::string& dir){
 //        cout << "~ ";
         return;
     }
-	
+
 }
 
 std::string getCurrentDirectory() {
@@ -660,18 +660,23 @@ void FIND(CMD cmd)
             found = true;
         }else if(flag == 3) cout<<"Path "<<path<<" not found."<<el;
         else cout<<"The queried file/folder is not found in "<<path<<"."<<el;
+        return;
     }
 
     if(check_all||!check_path)for(int i=0;i<PATH.size();++i){
         flag = Find_in_path(Query, PATH[i], path_found, check_all);
         if(!flag){
-            cout<<"The queried file/folder is found with path "<<PATH[i] + Query<<el;
+            //cout<<"The queried file/folder is found with path "<<PATH[i] + Query<<el;
             found = true;
             if(!check_all) break;
         }else if(flag == 3) cout<<"Path "<<PATH[i]<<" not found."<<el;
         else cout<<"The queried file/folder is not found in "<<PATH[i]<<"."<<el;
     }
-    if(!found) cout<<"The queried file/folder is not found."<<el;
+    if(!found)
+    {
+        cout<<"The queried file/folder is not found."<<el;
+        return;
+    }
     cout<<"The queried file/folder is found in:"<<el;
     for(set<string>::iterator it = path_found.begin();it != path_found.end();it++) cout<<*it<<el;
     return;
@@ -690,7 +695,7 @@ void MyShell()
     string cmd_str;
     ROOT_PATH = getCurrentDirectory() + "\\";
     PATH.push_back(ROOT_PATH);
-    
+
     while(true)
     {
         Cleanse_Background();
