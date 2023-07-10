@@ -30,7 +30,7 @@ HANDLE Ctrl_handler;
 bool fgp_interrupt = false;
 
 string ROOT_PATH = ""; // Root directory of shell, for e.g. D:\\IT3070\\MyShell\\ //
-set<string> PATH;
+list<string> PATH;
 
 CMD get_cmd(string cmd_str);
 int str2int(string x);
@@ -61,7 +61,7 @@ void DATE_();
 void TIME_();
 bool MKDIR(const std::string& directoryPath);
 void get_subdir(stack<string> &subdir, string path);
-int Find_in_path(string Query, string path, set<string> &path_found, bool all);
+int Find_in_path(string Query, string path, list<string> &path_found, bool all);
 void FIND(CMD cmd);
 bool path_exists(string path);
 void load_paths(char*file_path);
@@ -603,7 +603,7 @@ void get_subdir(stack<string> &subdir, string path){
     }while (FindNextFile(hFind, &lpResult) != 0);
 }
 
-int Find_in_path(string Query, string path, set<string> &path_found, bool all = false)
+int Find_in_path(string Query, string path, list<string> &path_found, bool all = false)
 {
     bool found = false;
     int flag = 0;
@@ -612,7 +612,7 @@ int Find_in_path(string Query, string path, set<string> &path_found, bool all = 
     WIN32_FIND_DATA lpResult;
     HANDLE hFind = FindFirstFileA(lpQuery, &lpResult);
     if(hFind != INVALID_HANDLE_VALUE){
-        path_found.insert(path);
+        path_found.push_back(path);
         found = true;
     }else flag = GetLastError();
 
@@ -626,7 +626,7 @@ int Find_in_path(string Query, string path, set<string> &path_found, bool all = 
             lpQuery = (LPCSTR) path_Query.c_str();
             hFind = FindFirstFileA(lpQuery, &lpResult);
             if(hFind != INVALID_HANDLE_VALUE){
-                path_found.insert(path);
+                path_found.push_back(path);
                 found = true;
                 if(!all) break;
             }
@@ -647,7 +647,7 @@ void FIND(CMD cmd)
         cout<<el;
         return;
     }
-    set<string> path_found;
+    list<string> path_found;
     string Query = cmd.Arg[0];
     string mode = "-auto";
     bool check_all = false, check_path = false, found = false;
@@ -665,7 +665,7 @@ void FIND(CMD cmd)
         else cout<<"The queried file/folder is not found in "<<path<<"."<<el;
     }
 
-    if(check_all||!check_path)for(set<string>::iterator P = PATH.begin();P != PATH.end();P++){
+    if(check_all||!check_path)for(list<string>::iterator P = PATH.begin();P != PATH.end();P++){
         flag = Find_in_path(Query, *P, path_found, check_all);
         if(!flag){
             // cout<<"The queried file/folder is found with path "<<*P + Query<<el;
@@ -678,7 +678,7 @@ void FIND(CMD cmd)
     if(!found) cout<<"The queried file/folder is not found."<<el;
     else{
         cout<<"The queried file/folder is found in:"<<el;
-        for(set<string>::iterator pf = path_found.begin();pf != path_found.end();pf++) cout<<*pf<<el;
+        for(list<string>::iterator pf = path_found.begin();pf != path_found.end();pf++) cout<<*pf<<el;
     }
 
     return;
@@ -702,16 +702,16 @@ void load_paths(char*file_path)
     }
     string path = "";
     while(1){
-        char*temp;
+        char temp[2];
         fread(temp,sizeof(char),1,file);
         if(feof(file)) break;
         if(strcmp(temp,"\n")) path = path + temp;
         else{
-            PATH.insert(path);
-            cout<<path<<el;
+            PATH.push_back(path);
             path = "";
         }
     }
+    PATH.unique();
     fclose(file);
 }
 
@@ -720,31 +720,31 @@ void PATH_(CMD cmd)
     if(cmd.Arg.size()>=2 && cmd.Arg[0]=="-insert"){
         string path = cmd.Arg[1];
         if(path[path.length()-1]!='\\') path = path + '\\';
-        if(path_exists(path)) PATH.insert(path);
+        if(path_exists(path)) PATH.push_back(path);
         else {
             char check = ' ';
             cout<<"Path "<<path<<" is invalid. Insert anyway?\nY/y: Yes, Anything else: No\n";
             cin>>check;
-            if(check=='y' || check=='Y') PATH.insert(path);
+            if(check=='y' || check=='Y') PATH.push_back(path);
         }
+        PATH.unique();
     }else if(cmd.Arg.size()>=2 && cmd.Arg[0]=="-remove"){
         string path = cmd.Arg[1];
         if(path[path.length()-1]!='\\') path = path + '\\';
-        std::set<string>::iterator P = PATH.find(path);
-        if(*P==ROOT_PATH){
+        if(path==ROOT_PATH){
             char check = ' ';
             cout<<"This is the root path. Are you sure you want to remove?\nY/y: Yes, Anything else: No\n";
             cin>>check;
-            if(check=='y' || check=='Y') PATH.erase(P);
-        }else if(P!=PATH.end()) PATH.erase(P);
+            if(check=='y' || check=='Y') PATH.remove(path);
+        }else PATH.remove(path);
     }else if(cmd.Arg.size()>=1 && cmd.Arg[0]=="-reset"){
         PATH.clear();
-        PATH.insert(ROOT_PATH);
+        PATH.push_back(ROOT_PATH);
     }else if(cmd.Arg.size()>=2 && cmd.Arg[0]=="-load"){
         string file_path = cmd.Arg[1];
         load_paths((char*) file_path.c_str());
     }else{
-        for(set<string>::iterator P = PATH.begin();P != PATH.end();P++){
+        for(list<string>::iterator P = PATH.begin();P != PATH.end();P++){
             if(*P==ROOT_PATH) cout<<"(root) ";
             cout<<*P<<el;
         }
@@ -752,7 +752,7 @@ void PATH_(CMD cmd)
     }
     string path = ROOT_PATH + "path.txt";
     FILE*file = fopen(path.c_str(),"w");
-    for(set<string>::iterator P = PATH.begin();P != PATH.end();P++){
+    for(list<string>::iterator P = PATH.begin();P != PATH.end();P++){
         char*p = (char*) (*P).c_str(), *ln = "\n";
         fwrite(p,sizeof(char),strlen(p),file);
         fwrite(ln,sizeof(char),1,file);
@@ -766,7 +766,7 @@ void MyShell()
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
     string cmd_str;
     ROOT_PATH = getCurrentDirectory() + "\\";
-    PATH.insert(ROOT_PATH);
+    PATH.push_back(ROOT_PATH);
     string temp = ROOT_PATH +"path.txt";
     load_paths((char*) temp.c_str());
     
