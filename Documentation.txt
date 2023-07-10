@@ -1,6 +1,6 @@
     MyShell Documentation
 ******************************
-Command list - Update 9-10/7/2023
+Command list - Update 10/7/2023
 
 NOTE: 
 []: compulsory parameters.
@@ -27,10 +27,10 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 * list	: List running background process in chronological order.
 -----------------------
 * kill [process_id] (t_wait)	: Kill background process.
-* kill [-all] (t_wait) (-apart)	: Kill all background processes.
-* kill [-list] [process_id...]	: Kill background processes in the list.
+* kill -all (t_wait) (-apart)	: Kill all background processes.
+* kill -list [process_id...]	: Kill background processes in the list.
 	(-wait [t_wait]) (-apart)
-* kill [-task] (t_wait) (-apart): Kill background processes doing the specific task.
+* kill -task (t_wait) (-apart): Kill background processes doing the specific task.
 	- process_id (DWORD)	: Background process id.
 	- t_wait (ms)		: Waiting time before process termination. The process will run in foreground mode during this duration.
 	-wait			: Denote that the kill -list command has waiting time.
@@ -38,12 +38,12 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 	E.g. 			: kill 1234 5000.
 -----------------------
 * pause [process_id]	: Pause specified process (by suspending its prime thread).
-* pause [-all]		: Pause all process (by suspending theirs prime thread).
+* pause -all		: Pause all process (by suspending theirs prime thread).
 	- process_id (DWORD)	: Background process id.
 	E.g. 			: pause 1234.
 -----------------------
 * resume [process_id]		: Resume specified process (by resumming its prime thread).
-* resume [-all]			: Resume allprocess (by resumming their prime thread).
+* resume -all			: Resume allprocess (by resumming their prime thread).
 	- process_id (DWORD)	: Background process id.
 	E.g. 			: resume 1234.
 -----------------------
@@ -77,8 +77,8 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 	E.g.				: Find test.txt -all.
 -----------------------
 * path			: Print out the environment paths.
-* path [-insert] [path]	: Insert new path to the environment paths.
-* path [-remove] [path]	: Remove path in the environment paths.
-* path [-reset]		: Reset the environment paths.
-* path [-load] [path]	: Load paths from a txt file into the environment paths.
+* path -insert [path]	: Insert new path to the environment paths.
+* path -remove [path]	: Remove path in the environment paths.
+* path -reset		: Reset the environment paths.
+* path -load [path]	: Load paths from a txt file into the environment paths.
 	E.g.		: path -reset.
