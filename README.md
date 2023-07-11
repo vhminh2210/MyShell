@@ -4,7 +4,7 @@ TinyShell project for Operating System course (IT3070 - HUST)
 
 ## Installation
 
-Download the shell at `https://github.com/vhminh2210/MyShell`.
+Download the shell at https://github.com/vhminh2210/MyShell.
 
 For updates and more information visit [our github](https://github.com/vhminh2210/MyShell).
 
