@@ -909,7 +909,7 @@ void MyShell()
             printf("Y/y: Yes, Anything else: No\n");
             scanf("%c",&permit);
             if (permit=='y' || permit=='Y'){
-                std::string a = cmd.Type.c_str();
+                std::string a = "";
                 for(int l = 0; l < cmd.Arg.size();l++){
                     a += " ";
                     a += cmd.Arg[l];
