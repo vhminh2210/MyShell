@@ -35,7 +35,9 @@ list<string> PATH;
 CMD get_cmd(string cmd_str);
 int str2int(string x);
 void Print_CMD(CMD cmd);
+void RaiseCtrlCInterrupt();
 void SIGINT_Handler(int param);
+bool Check_fgp_status();
 void Get_signal();
 void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME);
 void Kill_Background_Process(PROCESS_INFORMATION pi, bool immediate, DWORD MAX_TIME);
@@ -511,7 +513,7 @@ void HELP(const std::string& filename) {
 }
 
 void BATCH(const std::string& filename) {
-    std::string command = "cmd /c " + filename;
+    std::string command = "cmd /c \"" + filename + "\"";
 
     int result = system(command.c_str());
 
