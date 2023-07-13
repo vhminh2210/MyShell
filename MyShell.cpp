@@ -793,8 +793,12 @@ void MyShell()
         if(cin.eof() || cin.fail())
         {
             RaiseCtrlCInterrupt();
-            EXIT();
-            cout<<"Exiting MyShell ...";
+            cin.clear();
+            char check = ' ';
+			cout<<"Are you sure you want to exit the shell?\nY/y: Yes, Anything else: No\n";
+            cin>>check;
+            if(check=='y' || check=='Y') EXIT();
+            else continue;
             return;
         }
         CMD cmd = get_cmd(cmd_str);
