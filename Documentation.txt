@@ -16,12 +16,12 @@ E.g. : "New~folder" instead of "New folder".
 * bgp [task] (task_num)	: Create background process. Support .exe file execution.
 	- task (str)	: Executable file name in the current working directory (cwd).
 	- task_num	: Numbers of processed to be created.
-	E.g. 		: bgp HelloWorld.exe.
+	E.g. 		: bgp HelloWorld.exe
 -----------------------
 * fgp [task] (t_wait)	: Create foreground process. Suppport .exe file execution.
 	- task (str)	: Executable file name in the current working directory (cwd).
 	- t_wait (ms)	: Waiting time before process termination. The process will run in foreground mode during this duration.
-	E.g. 		: fgp HelloWorld.exe 10000.
+	E.g. 		: fgp HelloWorld.exe 10000
 The foreground process can be interupt by a Ctrl-C signal from its active window.
 -----------------------
 * list	: List running background process in chronological order.
@@ -35,26 +35,26 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 	- t_wait (ms)		: Waiting time before process termination. The process will run in foreground mode during this duration.
 	-wait			: Denote that the kill -list command has waiting time.
 	-apart			: Denote that all processes get killed t_wait (ms) apart.
-	E.g. 			: kill 1234 5000.
+	E.g. 			: kill 1234 5000
 -----------------------
 * pause [process_id]	: Pause specified process (by suspending its prime thread).
 * pause -all		: Pause all process (by suspending theirs prime thread).
 	- process_id (DWORD)	: Background process id.
-	E.g. 			: pause 1234.
+	E.g. 			: pause 1234
 -----------------------
 * resume [process_id]		: Resume specified process (by resumming its prime thread).
 * resume -all			: Resume allprocess (by resumming their prime thread).
 	- process_id (DWORD)	: Background process id.
-	E.g. 			: resume 1234.
+	E.g. 			: resume 1234
 -----------------------
 * status [process_id]	: Get specified process status.
 	- process_id (DWORD)	: Background process id.
-	E.g. 			: status 1234.
+	E.g. 			: status 1234
 -----------------------
 * bat    [filename]             : Run the specified .bat file.
         - filename              : The name of the .bat file.
-	E.g.                    : bat example.bat.
-				  bat example.
+	E.g.                    : bat example.bat
+				  bat example
 -----------------------
 * date	: Print out the date in D-M-YYYY format.
 -----------------------
@@ -74,13 +74,13 @@ The foreground process can be interupt by a Ctrl-C signal from its active window
 	-auto (default)			: Find <name> in PATH and their sub directory.
 	-path	    			: Find <name> in <path> and its sub directory.
 	-all				: Find all file/folder with name <name> in PATH, <path> and their sub directory.
-	E.g.				: Find test.txt -all.
+	E.g.				: Find test.txt -all
 -----------------------
 * path			: Print out the environment paths.
 * path -insert [path]	: Insert new path to the environment paths.
 * path -remove [path]	: Remove path in the environment paths.
 * path -reset		: Reset the environment paths.
 * path -load [path]	: Load paths from a txt file into the environment paths.
-	E.g.		: path -reset.
+	E.g.		: path -reset
 -----------------------
 * system [command]	: Use system to run command.
