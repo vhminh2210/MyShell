@@ -501,7 +501,7 @@ void HELP(const std::string& filename) {
 }
 
 void BATCH(const std::string& filename) {
-    std::string command = "cmd /c " + filename;
+    std::string command = "cmd /c \"" + filename + "\"";
 
     int result = system(command.c_str());
 
