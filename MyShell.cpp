@@ -754,7 +754,7 @@ void PATH_(CMD cmd)
     string path = ROOT_PATH + "path.txt";
     FILE*file = fopen(path.c_str(),"w");
     for(list<string>::iterator P = PATH.begin();P != PATH.end();P++){
-        char*p = (char*) (*P).c_str(), *ln = "\n";
+        char*p = (char*) (*P).c_str(), ln[] = "\n";
         fwrite(p,sizeof(char),strlen(p),file);
         fwrite(ln,sizeof(char),1,file);
     }
