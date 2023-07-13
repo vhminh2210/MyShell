@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <bits/stdc++.h>
 #include <direct.h>
+#include <unistd.h>
 #define el '\n'
 
 using namespace std;
@@ -165,7 +166,6 @@ void SIGINT_Handler(int param)
 void SIGINT_Handler_Shell(int param)
 {
     RaiseCtrlCInterrupt();
-    system("pause");
     return;
 }
 
@@ -180,6 +180,17 @@ BOOL WINAPI Handler_shell(DWORD cntrlEvent)
     return TRUE;
 }
 
+BOOL WINAPI Handler(DWORD cntrlEvent)
+{
+    if(cntrlEvent != CTRL_C_EVENT)
+    {
+        cout<<"Unknown command.\n";
+        return TRUE;
+    }
+    SIGINT_Handler(0);
+    return TRUE;
+}
+
 bool Check_fgp_status()
 {
     DWORD id_status;
@@ -190,7 +201,6 @@ bool Check_fgp_status()
 
 void Get_signal()
 {
-    signal(SIGINT, SIGINT_Handler);
     string sig = "";
     while(Check_fgp_status())
     {
@@ -201,7 +211,6 @@ void Get_signal()
         if(cin.fail() || cin.eof())
         {
             cin.clear();
-            raise(SIGINT);
             return;
         }
         else
@@ -234,6 +243,8 @@ void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME= INFINITE)
     CloseHandle(cur_fgp.hThread);
 
     CloseHandle(Ctrl_handler);
+
+    sleep(1);
 
     if(!fgp_interrupt) cout<<"Foreground process ended successfully. Press enter to continue ...\n";
     //WaitForSingleObject(Ctrl_handler, MAX_TIME);
@@ -796,8 +807,6 @@ void PATH_(CMD cmd)
 
 void MyShell()
 {
-    SetConsoleCtrlHandler(Handler_shell, TRUE);
-	
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
     string cmd_str;
     ROOT_PATH = getCurrentDirectory() + "\\";
@@ -814,7 +823,9 @@ void MyShell()
         getline(cin, cmd_str);
         if(cin.eof() || cin.fail())
         {
-            RaiseCtrlCInterrupt();
+            cout<<el;
+            SetConsoleCtrlHandler(Handler_shell, TRUE);
+            sleep(1);
             cin.clear();
             char check = ' ';
 			cout<<"Are you sure you want to exit the shell?\nY/y: Yes, Anything else: No\n";
@@ -830,6 +841,7 @@ void MyShell()
 			cout<<"Are you sure you want to exit the shell?\nY/y: Yes, Anything else: No\n";
             cin>>check;
             if(check=='y' || check=='Y') EXIT();
+            else continue;
             break;
         }
         if(cmd.Type == "bgp")
@@ -849,6 +861,7 @@ void MyShell()
         }
         if(cmd.Type == "fgp")
         {
+            SetConsoleCtrlHandler(Handler, TRUE);
             RUN_FGP(cmd);
             continue;
         }
