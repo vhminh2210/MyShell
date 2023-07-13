@@ -28,6 +28,7 @@ set <DWORD> Cur_Ids; // Current processes
 int cnt_history;
 PROCESS_INFORMATION cur_fgp;
 HANDLE Ctrl_handler;
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 bool fgp_interrupt = false;
 
 string ROOT_PATH = ""; // Root directory of shell, for e.g. D:\\IT3070\\MyShell\\ //
@@ -73,6 +74,7 @@ bool path_exists(string path);
 bool load_paths(char*file_path);
 void PATH_();
 void MyShell();
+void change_color(int k);
 
 int main()
 {
@@ -135,15 +137,19 @@ void Print_CMD(CMD cmd)
 }
 
 void RaiseSyntaxError()
-{
+{	
+	change_color(12);
     cout<<"Syntax Error. Please check your command argument list"<<el;
+    change_color(15);
 //    cout<<"~ ";
     return;
 }
 
 void RaiseCmdNotFound()
-{
+{	
+	change_color(12);
     cout<<"LMS: Command not found."<<el;
+    change_color(15);
 //    cout<<"~ ";
     return;
 }
@@ -160,8 +166,10 @@ void SIGINT_Handler(int param)
     CloseHandle(cur_fgp.hProcess);
     CloseHandle(cur_fgp.hThread);
     fgp_interrupt = true;
+    change_color(14);
     cout<<"Foreground process interrupt by Ctrl-C signal."<<el;
-    return;
+    change_color(15);
+	return;
 }
 
 void SIGINT_Handler_Shell(int param)
@@ -174,7 +182,9 @@ BOOL WINAPI Handler_shell(DWORD cntrlEvent)
 {
     if(cntrlEvent != CTRL_C_EVENT)
     {
+    	change_color(12);
         cout<<"Unknown command.\n";
+        change_color(15);
         return TRUE;
     }
     SIGINT_Handler_Shell(0);
@@ -185,7 +195,9 @@ BOOL WINAPI Handler(DWORD cntrlEvent)
 {
     if(cntrlEvent != CTRL_C_EVENT)
     {
+    	change_color(12);
         cout<<"Unknown command.\n";
+        change_color(15);
         return TRUE;
     }
     SIGINT_Handler(0);
@@ -291,8 +303,10 @@ PROCESS_INFORMATION Create_Background_Process(LPCSTR task)
 bool Check_id_exists(DWORD id)
 {
     if(Cur_Ids.find(id) == Cur_Ids.end())
-    {
+    {	
+    	change_color(12);
         cout<<"Process "<<id<<" does not exist"<<el;
+		change_color(15);
 //        cout<<"~ ";
         return false;
     }
@@ -530,8 +544,10 @@ void STATUS(DWORD id)
 void HELP(const std::string& filename) {
     std::ifstream file(filename);
     if (!file) {
+    	change_color(12);
         std::cout << "Failed to open the file." << std::endl;
-        return;
+        change_color(15);
+		return;
     }
 
     std::string line;
@@ -553,8 +569,10 @@ void BATCH(const std::string& filename) {
     if (result == 0) {
         std::cout << "\nBatch file executed successfully." << std::endl;
     } else {
+    	change_color(12);
         std::cout << "\nFailed to execute the batch file." << std::endl;
-    }
+    	change_color(15);
+	}
 //    cout << "~ ";
     return;
 }
@@ -567,8 +585,10 @@ void CD(const std::string& dir){
     if (result == 0) {
         return;
     } else {
+    	change_color(12);
         std::cout << "No such directory." << std::endl;
 //        cout << "~ ";
+		change_color(15);
         return;
     }
 
@@ -591,8 +611,10 @@ void DIR(){
 
     handle = _findfirst((directoryPath + std::string("\\*")).c_str(), &fileInfo);
     if (handle == -1) {
+    	change_color(12);
         std::cout << "Failed to open directory." << std::endl;
-        return;
+        change_color(15);
+		return;
     }
 	int count = 0;
     do {
@@ -628,8 +650,10 @@ bool MKDIR(const std::string& directoryPath) {
         std::cout << "Directory " << directoryPath.c_str() << " created successfully." << std::endl;
         return true;
     } else {
+    	change_color(12);
         std::cout << "Failed to create directory " << directoryPath.c_str() << std::endl;
-        return false;
+        change_color(15);
+		return false;
     }
 }
 
@@ -807,6 +831,10 @@ void PATH_(CMD cmd)
     return;
 }
 
+void change_color(int k){
+	SetConsoleTextAttribute(hConsole,k);
+}
+
 void MyShell()
 {
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
@@ -830,8 +858,10 @@ void MyShell()
             sleep(1);
             cin.clear();
             char check = ' ';
+            change_color(14);
 			cout<<"Are you sure you want to exit the shell?\nY/y: Yes, Anything else: No\n";
-            cin>>check;
+            change_color(15);
+			cin>>check;
             if(check=='y' || check=='Y') EXIT();
             else continue;
             return;
@@ -840,8 +870,10 @@ void MyShell()
         if(cmd.Type == "exit")
         {
             char check = ' ';
+            change_color(14);
 			cout<<"Are you sure you want to exit the shell?\nY/y: Yes, Anything else: No\n";
-            cin>>check;
+            change_color(15);
+			cin>>check;
             if(check=='y' || check=='Y') EXIT();
             else continue;
             break;
@@ -966,9 +998,11 @@ void MyShell()
         }
         if (cmd.Type == "system"){
             char permit = ' ';
+            change_color(14);
             printf("WARNING: This feature may cause random things to happen.\nPermit? ");
             printf("Y/y: Yes, Anything else: No\n");
-            scanf("%c",&permit);
+            change_color(15);
+			scanf("%c",&permit);
             if (permit=='y' || permit=='Y'){
                 std::string a = "";
                 for(int l = 0; l < cmd.Arg.size();l++){
