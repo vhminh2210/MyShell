@@ -349,6 +349,7 @@ void KILL(CMD cmd)
         if(cmd.Arg.size()>=3&&cmd.Arg[2]=="-apart") apart = true;
     	for(auto P : PROCESS_IDS){
     		DWORD p = P.second;
+            if(PROCESS_DICT[p].Task == "NULL") continue;
     		Kill_Background_Process(PROCESS_DICT[p].PI,false,t_wait);
             if(!apart) t_wait = 0;
 		}
