@@ -160,6 +160,24 @@ void SIGINT_Handler(int param)
     return;
 }
 
+void SIGINT_Handler_Shell(int param)
+{
+    RaiseCtrlCInterrupt();
+    system("pause");
+    return;
+}
+
+BOOL WINAPI Handler_shell(DWORD cntrlEvent)
+{
+    if(cntrlEvent != CTRL_C_EVENT)
+    {
+        cout<<"Unknown command.\n";
+        return TRUE;
+    }
+    SIGINT_Handler_Shell(0);
+    return TRUE;
+}
+
 bool Check_fgp_status()
 {
     DWORD id_status;
@@ -776,6 +794,8 @@ void PATH_(CMD cmd)
 
 void MyShell()
 {
+    SetConsoleCtrlHandler(Handler_shell, TRUE);
+	
     cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
     string cmd_str;
     ROOT_PATH = getCurrentDirectory() + "\\";
