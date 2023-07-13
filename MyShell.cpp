@@ -40,6 +40,7 @@ void RaiseCtrlCInterrupt();
 void SIGINT_Handler(int param);
 void SIGINT_Handler_Shell(int param);
 BOOL WINAPI Handler_shell(DWORD cntrlEvent);
+BOOL WINAPI Handler(DWORD cntrlEvent);
 bool Check_fgp_status();
 void Get_signal();
 void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME);
@@ -69,7 +70,7 @@ void get_subdir(stack<string> &subdir, string path);
 int Find_in_path(string Query, string path, list<string> &path_found, bool all);
 void FIND(CMD cmd);
 bool path_exists(string path);
-void load_paths(char*file_path);
+bool load_paths(char*file_path);
 void PATH_();
 void MyShell();
 
@@ -737,12 +738,12 @@ bool path_exists(string path)
     return hFind != INVALID_HANDLE_VALUE;
 }
 
-void load_paths(char*file_path)
+bool load_paths(char*file_path)
 {
     FILE*file = fopen(file_path,"r");
     if(file == NULL){
         cout<<"Load file unsuccessfully"<<el;
-        return;
+        return false;
     }
     string path = "";
     while(1){
@@ -757,6 +758,7 @@ void load_paths(char*file_path)
     }
     PATH.unique();
     fclose(file);
+    return true;
 }
 
 void PATH_(CMD cmd)
@@ -812,7 +814,7 @@ void MyShell()
     ROOT_PATH = getCurrentDirectory() + "\\";
     PATH.push_back(ROOT_PATH);
     string temp = ROOT_PATH +"path.txt";
-    load_paths((char*) temp.c_str());
+    if(!load_paths((char*) temp.c_str())) cout<<"Use \"path\" command to automatically create \"path.txt\" file"<<el;
 
     while(true)
     {
