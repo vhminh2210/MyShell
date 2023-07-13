@@ -37,6 +37,8 @@ int str2int(string x);
 void Print_CMD(CMD cmd);
 void RaiseCtrlCInterrupt();
 void SIGINT_Handler(int param);
+void SIGINT_Handler_Shell(int param);
+BOOL WINAPI Handler_shell(DWORD cntrlEvent);
 bool Check_fgp_status();
 void Get_signal();
 void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME);
