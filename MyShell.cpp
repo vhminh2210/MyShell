@@ -128,6 +128,26 @@ void Print_CMD(CMD cmd)
     return;
 }
 
+void RaiseSyntaxError()
+{
+    cout<<"Syntax Error. Please check your command argument list"<<el;
+//    cout<<"~ ";
+    return;
+}
+
+void RaiseCmdNotFound()
+{
+    cout<<"LMS: Command not found."<<el;
+//    cout<<"~ ";
+    return;
+}
+
+void RaiseCtrlCInterrupt()
+{
+    cout<<"Ctrl-C interrupt signal found.\n";
+    return;
+}
+
 void SIGINT_Handler(int param)
 {
     TerminateProcess(cur_fgp.hProcess, 0);
@@ -135,20 +155,26 @@ void SIGINT_Handler(int param)
     CloseHandle(cur_fgp.hThread);
     fgp_interrupt = true;
     cout<<"Foreground process interrupt by Ctrl-C signal."<<el;
-    TerminateThread(Ctrl_handler, 0);
-    CloseHandle(Ctrl_handler);
     return;
+}
+
+bool Check_fgp_status()
+{
+    DWORD id_status;
+    GetExitCodeProcess(cur_fgp.hProcess, &id_status);
+    if(id_status == STILL_ACTIVE) return true;
+    return false;
 }
 
 void Get_signal()
 {
     signal(SIGINT, SIGINT_Handler);
     string sig = "";
-    while(true)
+    while(Check_fgp_status())
     {
         DWORD id_status;
         GetExitCodeProcess(cur_fgp.hProcess, &id_status);
-        if(id_status != 259) return;
+        if(id_status != STILL_ACTIVE) return;
         getline(cin, sig);
         if(cin.fail() || cin.eof())
         {
@@ -158,8 +184,7 @@ void Get_signal()
         }
         else
         {
-            GetExitCodeProcess(cur_fgp.hProcess, &id_status);
-            if(id_status == 259) cout<<"Unknown command.\n";
+            if(Check_fgp_status()) cout<<"Unknown command.\n";
             else return;
         }
     }
@@ -172,25 +197,24 @@ void Create_Foreground_Process(LPCSTR task, DWORD MAX_TIME= INFINITE)
     PROCESS_INFORMATION pi;
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
-    CreateProcess(task, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
-    cur_fgp = pi;
+    CreateProcess(task, NULL, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &cur_fgp);
+    //cur_fgp = pi;
 
     DWORD Id;
     Ctrl_handler = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) Get_signal, NULL, 0, &Id);
-    HANDLE Handle[2] = {pi.hProcess, Ctrl_handler};
+    HANDLE Handle[2] = {cur_fgp.hProcess, Ctrl_handler};
 
-    WaitForSingleObject(pi.hProcess, MAX_TIME);
+    //WaitForSingleObject(pi.hProcess, MAX_TIME);
+    WaitForMultipleObjects(2, Handle, FALSE, MAX_TIME);
+
+    TerminateProcess(cur_fgp.hProcess, 0);
+    CloseHandle(cur_fgp.hProcess);
+    CloseHandle(cur_fgp.hThread);
+
+    CloseHandle(Ctrl_handler);
+
     if(!fgp_interrupt) cout<<"Foreground process ended successfully. Press enter to continue ...\n";
-    WaitForSingleObject(Ctrl_handler, MAX_TIME);
-
-    if(!fgp_interrupt)
-    {
-        TerminateProcess(pi.hProcess, 0);
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-
-        CloseHandle(Ctrl_handler);
-    }
+    //WaitForSingleObject(Ctrl_handler, MAX_TIME);
     fgp_interrupt = false;
     return;
 }
@@ -258,20 +282,6 @@ void Cleanse_Background()
         Cur_Ids.erase(id);
         PROCESS_DICT[id].Task = "NULL";
     }
-    return;
-}
-
-void RaiseSyntaxError()
-{
-    cout<<"Syntax Error. Please check your command argument list"<<el;
-//    cout<<"~ ";
-    return;
-}
-
-void RaiseCmdNotFound()
-{
-    cout<<"LMS: Command not found."<<el;
-//    cout<<"~ ";
     return;
 }
 
@@ -501,7 +511,7 @@ void HELP(const std::string& filename) {
 }
 
 void BATCH(const std::string& filename) {
-    std::string command = "cmd /c \"" + filename + "\"";
+    std::string command = "cmd /c " + filename;
 
     int result = system(command.c_str());
 
@@ -518,7 +528,7 @@ void BATCH(const std::string& filename) {
 void CD(const std::string& dir){
 	const char* directory = dir.c_str();
 	int result = chdir(directory);
-    
+
     // Check the result of the directory change
     if (result == 0) {
         return;
@@ -527,7 +537,7 @@ void CD(const std::string& dir){
 //        cout << "~ ";
         return;
     }
-	
+
 }
 
 std::string getCurrentDirectory() {
@@ -770,7 +780,7 @@ void MyShell()
     PATH.push_back(ROOT_PATH);
     string temp = ROOT_PATH +"path.txt";
     load_paths((char*) temp.c_str());
-    
+
     while(true)
     {
         Cleanse_Background();
@@ -778,6 +788,13 @@ void MyShell()
         std::string currentDir = getCurrentDirectory();
     	std::cout << "LMS " << currentDir << " >> ";
         getline(cin, cmd_str);
+        if(cin.eof() || cin.fail())
+        {
+            RaiseCtrlCInterrupt();
+            EXIT();
+            cout<<"Exiting MyShell ...";
+            return;
+        }
         CMD cmd = get_cmd(cmd_str);
         if(cmd.Type == "exit")
         {
