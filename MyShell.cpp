@@ -573,6 +573,7 @@ void BATCH(const std::string& filename) {
         std::cout << "\nFailed to execute the batch file." << std::endl;
     	change_color(15);
 	}
+	system("color F");
 //    cout << "~ ";
     return;
 }
@@ -721,7 +722,7 @@ void FIND(CMD cmd)
     string mode = "-auto";
     bool check_all = false, check_path = false, found = false;
     int end = cmd.Arg.size(), flag;
-    if(cmd.Arg.size() >=3 && cmd.Arg[end-1] == "-all") check_all = true;
+    if(cmd.Arg.size() >=2 && cmd.Arg[end-1] == "-all") check_all = true;
     if(cmd.Arg.size() >=3 && cmd.Arg[1] == "-path") check_path = true;
     if(check_path){
         string path = cmd.Arg[2];
@@ -837,7 +838,15 @@ void change_color(int k){
 
 void MyShell()
 {
-    cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
+//    cout<<"Welcome to MyShell!\n\nPlease type \"help\" for instructions\n "<<el;
+    char welcome[] = "Welcome to MyShell!\n\n";
+	for(int i=0;i<strlen(welcome);i++){
+		change_color(i%5+9);
+		cout<<welcome[i];
+	}
+	change_color(15);
+	cout<<"Please type \"help\" for instructions\n "<<el;
+	cout<<el;
     string cmd_str;
     ROOT_PATH = getCurrentDirectory() + "\\";
     PATH.push_back(ROOT_PATH);
