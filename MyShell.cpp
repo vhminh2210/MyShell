@@ -180,7 +180,7 @@ void SIGINT_Handler_Shell(int param)
 
 BOOL WINAPI Handler_shell(DWORD cntrlEvent)
 {
-    if(cntrlEvent != CTRL_C_EVENT)
+	if(cntrlEvent != CTRL_C_EVENT)
     {
     	change_color(12);
         cout<<"Unknown command.\n";
@@ -425,7 +425,13 @@ void KILL(CMD cmd)
             }else if(cmd.Arg[end-2] == "-wait"){
                 t_wait = (DWORD) str2int(cmd.Arg[end-1]);
                 off = 1;
-            }
+            }else if(cmd.Arg[end-1] == "-apart" && cmd.Arg[end-3] != "-wait"){
+            	RaiseSyntaxError();
+            	return;
+			}else if(cmd.Arg[end-1] != "-apart" && cmd.Arg[end-3] == "-wait"){
+            	RaiseSyntaxError();
+            	return;
+			}
 			for(int i=1;i < (end-off);i++){
     			DWORD id = (DWORD) str2int(cmd.Arg[i]);
 				if(Check_id_exists(id)){
@@ -851,7 +857,7 @@ void MyShell()
     PATH.push_back(ROOT_PATH);
     string temp = ROOT_PATH +"path.txt";
     if(!load_paths((char*) temp.c_str())) cout<<"Use \"path\" command to automatically create \"path.txt\" file"<<el;
-
+    
     while(true)
     {
         Cleanse_Background();
