@@ -846,7 +846,6 @@ void MyShell()
 	}
 	change_color(15);
 	cout<<"Please type \"help\" for instructions\n "<<el;
-	cout<<el;
     string cmd_str;
     ROOT_PATH = getCurrentDirectory() + "\\";
     PATH.push_back(ROOT_PATH);
