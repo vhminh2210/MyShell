@@ -424,7 +424,7 @@ void KILL(CMD cmd)
                 off = 3;
             }else if(cmd.Arg[end-2] == "-wait"){
                 t_wait = (DWORD) str2int(cmd.Arg[end-1]);
-                off = 1;
+                off = 2;
             }else if(cmd.Arg[end-1] == "-apart" && cmd.Arg[end-3] != "-wait"){
             	RaiseSyntaxError();
             	return;
